@@ -1,10 +1,49 @@
 # CastLock-Vis
 
-> 演员「类型锁定」（类型锁定）与「转型窗口期」（转型窗口期）的可视分析系统 —— 课程选题 13。
+> 演员「类型锁定」与「转型窗口期」的可视分析系统。
 
 CastLock-Vis 用「**宏观群落分布 → 中观序列演化 → 微观个体下钻**」的递进式流水线，结合四个高度联动的视图，帮助分析师回答一个工业问题：**演员是如何被一步步焊死在「舒适圈」里的，又有谁、靠什么打破了这层「重力场」。**
 
-> **项目状态：尚未实现（pre-implementation）。** 当前仓库只包含设计文档，没有代码、构建工具或测试。技术栈待与团队确认后再行搭建。权威设计规格见 [`docs/overall_design/proposal.md`](docs/overall_design/proposal.md)。
+> **项目状态：开发中（in development）。** 设计已初步定型；离线数据流水线**已完成**，6 份数据契约 JSON 已生成并入库；前端 SPA（Vite + React 18 + TS + D3 + Zustand）脚手架已搭好（`npm run dev/build` 可跑通），四视图与三条联动链路正按 [`docs/plan/TODO.md`](docs/plan/TODO.md) 实现中。权威设计规格见 [`docs/overall_design/proposal.md`](docs/overall_design/proposal.md)。
+
+---
+
+## 快速开始
+
+```bash
+npm install        # 安装依赖
+npm run dev        # 开发服务器 → http://localhost:5173/CastLockVis/
+```
+
+| 命令 | 作用 |
+|---|---|
+| `npm run dev` | Vite 开发服务器（热更新） |
+| `npm run build` | `tsc -b && vite build` → `dist/`（含 `dist/data/*.json`） |
+| `npm run preview` | 本地预览生产构建 |
+| `npm run typecheck` | TS 类型检查（`strict`） |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier 格式化 `src/` |
+
+离线流水线（数据已入库，**通常无需运行**，仅在重算数据时）：
+`pip install -r pipeline/requirements.txt`，然后 `python pipeline/clean.py` → `python pipeline/pipeline_json.py`。
+详见 [`docs/contribution/config.md`](docs/contribution/config.md)。
+
+---
+
+## 技术栈
+
+两层架构，仅通过 `public/data/*.json`（**数据契约**）连接。**重计算全部离线**（Python：UMAP/MDS 降维、KMeans 聚类、香农熵、马尔可夫矩阵、T=0 对齐），**前端只渲染与联动，运行时绝不重算统计**。
+
+| 层 | 选型 |
+|---|---|
+| 构建 | Vite（原生支持静态产物与 `base` 子路径，Pages 部署必需） |
+| 框架 | React 18 + TypeScript（`strict`） |
+| 可视化 | D3.js（四视图均为定制图表，默认 SVG） |
+| 状态 | Zustand（集中式 store，承载多视图联动的脊柱） |
+| 样式 | CSS 变量（设计 token），便于第二阶段无缝换肤 |
+| 离线计算 | Python：pandas / numpy / scikit-learn |
+
+详见 [`docs/dev_rule/ARCHITECTURE.md`](docs/dev_rule/ARCHITECTURE.md)。
 
 ---
 
@@ -49,11 +88,28 @@ UMAP / MDS 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部
                                   [视图 C: 对齐分叉图高亮] & [详情弹窗]
 ```
 
-- **A → B + D（宏观→中观）：** 在 A 中框选某群落，B 重置为该群落的**平均叠加态**熵衰减曲线，D 重算该队列并按生涯阶段拆分。
+- **A → B + D（宏观→中观）：** 在 A 中框选某群落，B 重置为该群落的**平均叠加态**熵衰减曲线，D 取对应队列并按生涯阶段拆分（**群落粒度**：按选区覆盖的 `clusterId` 取预算矩阵，不实时重算）。
 - **B → C + 详情（中观→微观）：** 点击 B 熵曲线上的尖峰，激活 C（高亮该演员并对齐在同一作品索引尝试转型的同侪），并打开 details-on-demand 面板。
 - **C 上的全局过滤器（控制变量审计）：** 如「T=0 时合作导演的异质性」等过滤器需动态重组 C 的线条，揭示驱动分叉结果的外部协变量。
 
-**实现约束：** 实现任一视图时，必须保留联动视图所需的数据形态与标识符 —— 演员 ID、作品序列索引、T=0 锚点、队列归属。
+**实现约束：** 实现任一视图时，必须保留联动视图所需的数据形态与稳定标识符 —— `actorId`、`seqIndex`、`tau (= seqIndex − t0Index)`、`clusterId`、`dominantGenre`。不得改变其语义，否则联动断裂。
+
+---
+
+## 数据契约（`public/data/`）
+
+离线流水线产物，前端启动时一次性加载、运行时只筛选/汇总（纯函数 selector）。
+
+| 文件 | 形状（实际） | 消费视图 |
+|---|---|---|
+| `genres.json` | `string[]`（21 个类型，颜色映射 key 基准） | 全部 |
+| `actors.json` | 814 × `{id,name,dominantEarlyGenre,earlyGenreVector,filmCount,t0Index,outcome,projection[x,y],clusterId}` | A、cohort 源 |
+| `films.json` | 20811 × `{actorId,seqIndex,title,year,genres[],dominantGenre,rating,numVotes,directorId}` | B、详情 |
+| `entropy.json` | 814 × `{actorId,curve:[{n,entropy}]}`（n=1..30） | B（白线）、C（纵轴） |
+| `markov.json` | 24 × `{cohortId,stage,genres[21],matrix[21][21]}`（8 群落 × early/mid/late） | D |
+| `alignment.json` | 707 × `{actorId,clusterId,t0Index,outcome,points:[{tau,entropy}],covariatesAtT0:{numVotes,rating,directorHeterogeneity}}` | C |
+
+> **已知数据注意**（见 FEATURE_LIST F0.8–F0.10）：`films.title` 当前存的是 `tconst` 而非可读片名；`directorHeterogeneity` 仅存在于 `alignment.covariatesAtT0`（非按作品）。若某功能需要不同形态，请在 `clean.py`/`pipeline_json.py` 修改并重跑流水线。
 
 ---
 
@@ -62,19 +118,46 @@ UMAP / MDS 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部
 ```
 CastLockVis/
 ├── CLAUDE.md                          # 给 Claude Code 的工作指引
+├── index.html · package.json · vite.config.ts · tsconfig*.json · eslint.config.js
 ├── docs/
-│   ├── overall_design/
-│   │   └── proposal.md                # 权威设计规格（中文，动工前必读）
-│   └── dev_rule/
-│       ├── ARCHITECTURE.md            # 实现架构（待填）
-│       └── DESIGN_SYSTEM.md           # 设计系统 / 视觉 token（待填）
-└── README.md
+│   ├── overall_design/proposal.md     # 权威设计规格（中文）
+│   ├── plan/
+│   │   ├── TODO.md                    # 有序里程碑 S0–S6（工作队列）
+│   │   └── FEATURE_LIST.md            # 模块化功能拆解（Fx.y 编号）
+│   ├── dev_rule/
+│   │   ├── ARCHITECTURE.md            # 技术栈、数据契约(§5)、store/联动模型(§6)
+│   │   └── DESIGN_SYSTEM.md           # 两阶段视觉方案（骨架 → 完备）
+│   └── contribution/config.md         # 环境配置
+├── pipeline/                          # 离线 Python 流水线 + requirements.txt
+│   ├── clean.py · pipeline_json.py
+├── public/
+│   ├── data/*.json                    # 6 份数据契约（已入库，构建拷入 dist/data/）
+│   └── original_data/                 # 已清洗的中间 CSV
+└── src/                               # 前端源码（当前为 S0 冒烟测试，S1+ 起填充四视图）
+    ├── main.tsx · App.tsx
+    └── styles/{tokens,global}.css     # 设计 token（第一阶段占位，换肤只改这里）
 ```
+
+目标 `src/` 布局（`{data,store,views,components,lib}`）见 ARCHITECTURE §6.1。
+
+---
+
+## 开发指引（read order）
+
+1. [`docs/plan/TODO.md`](docs/plan/TODO.md) — 有序里程碑 S0–S6，**这是工作队列**。
+2. [`docs/plan/FEATURE_LIST.md`](docs/plan/FEATURE_LIST.md) — 模块化功能拆解（TODO 引用的 `Fx.y`）。
+3. [`docs/dev_rule/ARCHITECTURE.md`](docs/dev_rule/ARCHITECTURE.md) — 技术栈、数据契约（§5）、store/联动模型（§6）。
+4. [`docs/dev_rule/DESIGN_SYSTEM.md`](docs/dev_rule/DESIGN_SYSTEM.md) — 两阶段视觉方案（骨架 → 完备）。
+5. [`docs/overall_design/proposal.md`](docs/overall_design/proposal.md) — 权威规格：四任务、四视图、三联动链路。
+6. [`docs/contribution/config.md`](docs/contribution/config.md) — 环境配置。
 
 ---
 
 ## 贡献约定
 
-- proposal.md 使用一套固定领域术语（类型锁定、转型窗口期、舒适圈、重力场、对齐机制）。除非另有要求，代码标识符与 UI 文案应沿用这套术语。
-- 把 proposal.md 当作规格：若某个实现选择会削弱上述 4 个任务、或破坏任一联动链路，先与团队确认再编码。
-- 架构与设计系统决策确定后，写入 `docs/dev_rule/ARCHITECTURE.md` 与 `docs/dev_rule/DESIGN_SYSTEM.md`，而不是新建文件。
+- **联动是评分核心**：任一视图任何时候都必须保留上述稳定标识符，否则三条链路断裂。
+- **运行时禁止重算统计**：只对预算 JSON 做汇总/筛选（selector 纯函数、可记忆化）。
+- **两阶段视觉**：S0–S5 全程用中性占位 token，**禁止硬编码颜色/间距，一律引用 `src/styles/tokens.css` 的 CSS 变量**；第二阶段（S6）只改 token，不动视图逻辑。
+- **术语固定**：proposal.md 使用一套领域术语（类型锁定、转型窗口期、舒适圈、重力场、对齐机制）。除非另有要求，代码标识符与 UI 文案沿用之。
+- **文档为准**：架构与设计决策确定后写回 `docs/dev_rule/*`（范围变更写回 `docs/plan/*`），而非新建文件。
+- **规格权威**：若某实现选择会削弱 4 个任务、或破坏任一联动链路，先确认再编码。
