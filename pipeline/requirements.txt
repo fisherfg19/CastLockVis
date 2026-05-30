@@ -1,0 +1,7 @@
+# 离线数据流水线依赖（Python 3.12）。
+# 仅供本地/CI 一次性重跑 clean.py + pipeline_json.py，不进入前端运行时。
+# 用法见 docs/contribution/config.md。
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.4
+umap-learn>=0.5

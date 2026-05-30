@@ -1,0 +1,42 @@
+/*
+ * 设计 token（第一阶段 · 占位值）——照搬 docs/dev_rule/DESIGN_SYSTEM.md §1.1。
+ * 组件只引用变量、禁止硬编码颜色/间距。第二阶段（S6）只改本文件即可整体换肤。
+ */
+:root {
+  /* 间距标尺 (4px 基准) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* 圆角 / 边框 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --border: 1px solid var(--color-border);
+
+  /* 颜色角色 (阶段一：中性占位值) */
+  --color-bg: #1a1c1f; /* 应用背景（暗色，呼应白色熵线/红黑对角线） */
+  --color-surface: #232629; /* 面板表面 */
+  --color-border: #34383d;
+  --color-text: #e6e8ea;
+  --color-text-dim: #9aa0a6;
+  --color-accent: #4c8bf5; /* 选中/交互高亮（占位） */
+
+  /* 分叉语义色（视图 C，proposal 明确要求绿/红） */
+  --color-success: #3fb27f; /* 成功转型「多维演化区」 */
+  --color-snapback: #e0564f; /* 被弹回「重新固化区」 */
+
+  /* 类型分类色：阶段一先用占位序列，第二阶段定稿 */
+  --genre-1: #888;
+  --genre-2: #888;
+  --genre-3: #888;
+
+  /* 字体（阶段一用系统栈，第二阶段定稿） */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --fs-sm: 12px;
+  --fs-md: 14px;
+  --fs-lg: 18px;
+}
