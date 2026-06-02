@@ -34,14 +34,14 @@
 
 > 目标：一个能启动、能加载全部数据、能渲染空白四面板栅格的可运行壳。
 
-- [ ] **F1.3** `styles/tokens.css`：照搬 DESIGN_SYSTEM §1.1 占位变量到 `:root`
-- [ ] **F1.2 / F1.4** `App.tsx` 布局壳 + `ViewPanel` 统一外框（标题/工具条位/图例位/内容/空·加载·错误态）
-- [ ] **F2.1** `data/types.ts`：6 份契约的 TS 类型（对齐已生成 JSON 的实际字段，见 FEATURE_LIST F0.8–F0.10）
-- [ ] **F2.2** `data/loadData.ts`：启动一次性 fetch 6 JSON + 轻量形状校验
-- [ ] **F2.3** 数据索引：`actorsById` / `filmsByActor` / `markovBy(cluster,stage)` / `alignmentByActor`
-- [ ] **F1.5** 全局加载/错误边界
-- [ ] **F2.4** `store/useVizStore.ts`：交互状态字段 + actions（先建空壳，随视图接入逐步填充）
-- [ ] **F2.5 / F2.6** `store/selectors.ts` + `lib/aggregate.ts`：派生数据脚手架（cohort 成员 / cohort 平均熵 / 过滤矩阵 / 重分层）
+- [x] **F1.3** `styles/tokens.css`：照搬 DESIGN_SYSTEM §1.1 占位变量到 `:root`
+- [x] **F1.2 / F1.4** `App.tsx` 布局壳 + `ViewPanel` 统一外框（标题/工具条位/图例位/内容/空·加载·错误态）
+- [x] **F2.1** `data/types.ts`：6 份契约的 TS 类型（对齐已生成 JSON 的实际字段，见 FEATURE_LIST F0.8–F0.10）
+- [x] **F2.2** `data/loadData.ts`：启动一次性 fetch 6 JSON + 轻量形状校验
+- [x] **F2.3** 数据索引：`actorsById` / `filmsByActor` / `markovBy(cluster,stage)` / `alignmentByActor`
+- [x] **F1.5** 全局加载/错误边界（`DataProvider` + `ViewPanel` 的 loading/empty/error 态）
+- [x] **F2.4** `store/useVizStore.ts`：交互状态字段 + actions（brush/选择/stage/过滤器/详情）
+- [x] **F2.5 / F2.6** `store/selectors.ts` + `lib/aggregate.ts`：派生数据脚手架（cohort 成员 / cohort 平均熵 / 过滤矩阵 / 重分层）
 
 **验收**：`npm run dev` 显示 Header + 2×2 空面板；控制台确认 6 份 JSON 全部加载且类型校验通过。
 
@@ -49,11 +49,11 @@
 
 > 先做结构最简的两视图，并打通第一条联动（A→D），尽早验证「联动脊柱」可用。
 
-- [ ] **F3.1 / F3.2** ClusterView 静态散点：`projection` 坐标 + `dominantEarlyGenre` 着色 + 悬停 Tooltip
-- [ ] **F6.1 / F6.2 / F6.5** MarkovView 静态热力矩阵：色阶 + 行列标签 + 单元格 Tooltip + 对角线强调
-- [ ] **F6.3** MarkovView 阶段切换 Toggle（early/mid/late，写 `markovStage`）
+- [x] **F3.1 / F3.2** ClusterView 静态散点：`projection` 坐标 + `dominantEarlyGenre` 着色 + 悬停 Tooltip（已增强：簇图标 + 凸包）
+- [x] **F6.1 / F6.2 / F6.5** MarkovView 静态热力矩阵：色阶 + 行列标签 + 单元格 Tooltip + 对角线强调
+- [x] **F6.3** MarkovView 阶段切换 Toggle（early/mid/late，写 `markovStage`）
 - [ ] **F3.3 / F3.4** ClusterView `BrushLayer` 框选 → 写 `brushedActorIds` + 选中/降明度视觉态
-- [ ] **F8.1（A→D 部分）/ F6.4** 联动：brush 选区 → 映射覆盖的 `clusterId` → D 取对应 cohort×stage 矩阵（群落粒度，见 F0.10）
+- [~] **F8.1（A→D 部分）/ F6.4** 联动：selectors（`getDominantClusterId`→`getMarkovMatrixForCohort`）+ App 接线已就绪，D 已按主簇渲染；仅差 brush 触发端（F3.4）即可全闭环
 
 **验收**：在 A 框选一个群落，D 立即切换为该群落矩阵；切换阶段 Toggle 矩阵随之更新；清除选区回到全局态。
 
@@ -61,12 +61,12 @@
 
 > 两个定制图表，最耗时。完成后四视图均可独立渲染。
 
-- [ ] **F4.1** RiverView Streamgraph：横轴=作品序列 1..N、流厚度=滑动窗口类型比例
-- [ ] **F4.2** RiverView 叠加白色香农熵折线（`entropy.json`）
-- [ ] **F4.3** RiverView 每部电影圆点：评分/票数编码（位置或大小）
-- [ ] **F4.6** RiverView 单演员/群落两模式切换 + 空态
-- [ ] **F5.1** AlignmentView 对齐坐标系：`tau` 横轴 + T=0 竖轴标记（`alignment.json`）
-- [ ] **F5.2 / F5.5** AlignmentView 左侧低熵窄束 + 右侧绿/红分叉区（按 `outcome`）
+- [x] **F4.1** RiverView Streamgraph：横轴=作品序列 1..N、流厚度=滑动窗口类型比例
+- [x] **F4.2** RiverView 叠加白色香农熵折线（`entropy.json`）
+- [x] **F4.3** RiverView 每部电影圆点：评分/票数编码（位置或大小）
+- [~] **F4.6** RiverView 单演员/群落两模式切换 + 空态：单演员态 + 空态已具备；群落平均态与切换待接（与 S4·F4.4 合并）
+- [x] **F5.1** AlignmentView 对齐坐标系：`tau` 横轴 + T=0 竖轴标记（`alignment.json`）
+- [x] **F5.2 / F5.5** AlignmentView 左侧低熵窄束 + 右侧绿/红分叉区（按 `outcome`）
 
 **验收**：B 能渲染单演员河流+熵线、也能渲染群落平均态；C 能把全部对齐演员按 τ 对齐并按 outcome 分绿/红。
 
@@ -86,12 +86,12 @@
 
 ## S5 · 通用控件、打磨与部署（P0–P1 · 第一阶段收尾）
 
-- [ ] **F7.2 / F7.3** `Legend` + `Tooltip` 统一组件，各视图复用
-- [ ] **F7.4 / F7.5 / F7.6** `controls/Slider` `controls/Toggle` `controls/BrushLayer` 抽成通用控件
+- [ ] **F7.2 / F7.3** `Legend` + `Tooltip` 统一组件，各视图复用（现为各视图内联 figcaption + PanelLegends，未抽通用件）
+- [~] **F7.4 / F7.5 / F7.6** `controls/Slider` `controls/Toggle` `controls/BrushLayer` 抽成通用控件：`controls/Toggle` 已抽；Slider / BrushLayer 待做
 - [ ] **F1.6** 响应式与最小可用宽度
 - [ ] **F8.5 (P1)** 联动可发现性：当前队列说明文案 / 触发提示
-- [ ] **F3.5 (P1)** ClusterView 群落 hull / 密度底纹
-- [ ] **F10.1** `vite.config.ts` 设 `base`，确认 `dist/` 含 `data/*.json`
+- [x] **F3.5 (P1)** ClusterView 群落 hull / 密度底纹（已做凸包 hull + 每簇图标；密度底纹未做）
+- [x] **F10.1** `vite.config.ts` 设 `base`，确认 `dist/` 含 `data/*.json`
 - [ ] **F10.2** GitHub Actions：build → upload → deploy-pages
 - [ ] **F0.8 / F0.9 (P1)** 如需可读片名：`clean.py` 引入 `primaryTitle` 重跑流水线
 
