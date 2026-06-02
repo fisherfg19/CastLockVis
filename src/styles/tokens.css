@@ -60,6 +60,16 @@
   --genre-20: #17becf;
   --genre-21: #6b6f76;
 
+  /* 群落分类色（视图 A 簇图标 + 凸包；阶段一占位，第二阶段 S6 定稿） */
+  --cluster-0: #4e79a7;
+  --cluster-1: #f28e2b;
+  --cluster-2: #59a14f;
+  --cluster-3: #e15759;
+  --cluster-4: #b07aa1;
+  --cluster-5: #76b7b2;
+  --cluster-6: #edc949;
+  --cluster-7: #9c755f;
+
   /* 字体（阶段一用系统栈，第二阶段定稿） */
   --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;

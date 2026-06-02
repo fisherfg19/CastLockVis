@@ -67,11 +67,19 @@
   letter-spacing: 0.01em;
 }
 
+.sample-hull {
+  fill-opacity: 0.09;
+  stroke-width: 1.4;
+  stroke-opacity: 0.65;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
 .sample-point {
-  opacity: 0.68;
+  opacity: 0.72;
   stroke: var(--color-chart-bg);
   stroke-width: 0.9;
-  transition: opacity 180ms ease, r 180ms ease;
+  transition: opacity 180ms ease;
 }
 
 .sample-point:hover,

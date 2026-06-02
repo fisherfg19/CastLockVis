@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
 import type { Actor } from '../../data/types';
-import { buildGenreTokenLookup, linearScale, withPadding } from './chartUtils';
+import {
+  buildGenreTokenLookup,
+  clusterHullPath,
+  clusterSymbolPath,
+  linearScale,
+  withPadding,
+} from './chartUtils';
 
 interface ClusterSampleViewProps {
   actors: Actor[];
@@ -10,6 +16,12 @@ interface ClusterSampleViewProps {
 const WIDTH = 620;
 const HEIGHT = 320;
 const MARGIN = { top: 20, right: 18, bottom: 34, left: 34 };
+const POINT_R = 3.4;
+const POINT_R_ACTIVE = 5.4;
+const CLUSTER_TOKENS = 8; // tokens.css 提供 --cluster-0..7
+const HULL_KEEP_QUANTILE = 0.85; // 凸包只包住每簇最近 85% 的点，剔除离群点导致的虚胖
+const HULL_PAD_PX = 10; // 凸包外扩像素（让 Music 这类小簇可见）
+const HULL_MIN_RADIUS = 18; // 凸包最小半径（让坍缩成点的 Western/Musical 仍可见）
 
 export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
   const [hoveredActorId, setHoveredActorId] = useState<string | null>(null);
@@ -38,13 +50,31 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
       const x = linearScale(actor.projection[0], xMin, xMax, MARGIN.left, MARGIN.left + innerWidth);
       const y = linearScale(actor.projection[1], yMin, yMax, MARGIN.top + innerHeight, MARGIN.top);
       const tokenIndex = genreTokenLookup.get(actor.dominantEarlyGenre) ?? 1;
-      return { actor, x, y, tokenIndex };
+      return { actor, x, y, tokenIndex, clusterId: actor.clusterId };
     });
+
+    // 每个群落的凸包（≥3 点才有面），外扩一点留出呼吸空间。
+    const byCluster = new Map<number, Array<{ x: number; y: number }>>();
+    for (const point of points) {
+      const list = byCluster.get(point.clusterId) ?? [];
+      list.push({ x: point.x, y: point.y });
+      byCluster.set(point.clusterId, list);
+    }
+    const hulls = [...byCluster.entries()]
+      .map(([clusterId, pts]) => ({
+        clusterId,
+        path: clusterHullPath(pts, {
+          keepQuantile: HULL_KEEP_QUANTILE,
+          padPx: HULL_PAD_PX,
+          minRadius: HULL_MIN_RADIUS,
+        }),
+      }))
+      .filter((hull) => hull.path !== '');
 
     const tickXs = Array.from({ length: 6 }, (_, index) => MARGIN.left + (innerWidth * index) / 5);
     const tickYs = Array.from({ length: 5 }, (_, index) => MARGIN.top + (innerHeight * index) / 4);
 
-    return { points, tickXs, tickYs, innerWidth, innerHeight };
+    return { points, hulls, tickXs, tickYs, innerWidth, innerHeight };
   }, [actors, genreTokenLookup]);
 
   if (!chart) {
@@ -72,14 +102,26 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
         />
         <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={HEIGHT - MARGIN.bottom} className="sample-axis" />
 
-        {chart.points.map(({ actor, x, y, tokenIndex }) => {
+        {/* 群落凸包：颜色按 clusterId，圈出每个 cohort 的占位区域 */}
+        {chart.hulls.map((hull) => {
+          const token = ((hull.clusterId % CLUSTER_TOKENS) + CLUSTER_TOKENS) % CLUSTER_TOKENS;
+          return (
+            <path
+              key={`hull-${hull.clusterId}`}
+              d={hull.path}
+              className="sample-hull"
+              style={{ fill: `var(--cluster-${token})`, stroke: `var(--cluster-${token})` }}
+            />
+          );
+        })}
+
+        {/* 演员点：形状=群落(cluster)，填色=早期主导类型(genre) */}
+        {chart.points.map(({ actor, x, y, tokenIndex, clusterId }) => {
           const isHovered = hoveredActorId === actor.id;
           return (
-            <circle
+            <path
               key={actor.id}
-              cx={x}
-              cy={y}
-              r={isHovered ? 4.8 : 3}
+              d={clusterSymbolPath(clusterId, x, y, isHovered ? POINT_R_ACTIVE : POINT_R)}
               className={`sample-point ${isHovered ? 'sample-point--active' : ''}`}
               style={{ fill: `var(--genre-${tokenIndex})` }}
               onMouseEnter={() => setHoveredActorId(actor.id)}
@@ -92,7 +134,7 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
       <figcaption className="sample-chart__caption">
         {hoveredActor
           ? `${hoveredActor.name} · cluster ${hoveredActor.clusterId} · early=${hoveredActor.dominantEarlyGenre}`
-          : `Actors: ${actors.length} · clusters: ${new Set(actors.map((actor) => actor.clusterId)).size}`}
+          : `Actors: ${actors.length} · clusters: ${chart.hulls.length} · 形状=群落, 颜色=早期类型`}
       </figcaption>
     </figure>
   );

@@ -2,10 +2,20 @@ export function ClusterLegend() {
   return (
     <div className="panel-legend-grid">
       <span className="legend-item">
-        <span className="legend-dot legend-dot--active" />
-        <span>hover: 点放大 + 描边高亮</span>
+        <svg className="legend-glyphs" viewBox="0 0 64 12" aria-hidden>
+          <circle cx={6} cy={6} r={3.4} />
+          <rect x={17} y={2.6} width={6.8} height={6.8} />
+          <polygon points="33,2 36.4,9.6 29.6,9.6" />
+          <polygon points="46,1.6 49.6,6 46,10.4 42.4,6" />
+          <polygon points="58,1.6 60.2,5 63.6,5.6 61,8 61.6,11.4 58,9.8 54.4,11.4 55,8 52.4,5.6 55.8,5" />
+        </svg>
+        <span>形状 + 凸包 = 群落 (cluster)</span>
       </span>
-      <span className="legend-item">颜色映射见上方共享图例</span>
+      <span className="legend-item">填色 = 早期主导类型（见上方共享色图例）</span>
+      <span className="legend-item">
+        <span className="legend-dot legend-dot--active" />
+        <span>hover: 放大 + 描边高亮</span>
+      </span>
     </div>
   );
 }
