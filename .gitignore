@@ -28,3 +28,5 @@ venv/
 # raw IMDb source (download locally, never commit — see pipeline/clean.py)
 pipeline/imdb_data/
 pipeline/imdb_cleaned_flat.csv
+# cleaned intermediate at repo root (pipeline_json.py reads it cwd-relative)
+/imdb_cleaned_flat.csv
