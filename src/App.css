@@ -97,6 +97,54 @@
   font-size: var(--fs-sm);
 }
 
+.cluster-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.alignment-toolbar {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.filter-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-dim);
+  font-size: var(--fs-sm);
+}
+
+.filter-select select {
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  padding: var(--space-1) var(--space-2);
+}
+
+.panel-action-button {
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-dim);
+  font: inherit;
+  font-size: var(--fs-sm);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.panel-action-button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
 .panel-legend-grid {
   display: flex;
   flex-wrap: wrap;

@@ -18,11 +18,13 @@ interface VizState {
   clearBrush: () => void;
   selectActor: (actorId: string | null) => void;
   selectSpike: (filmIndex: number | null) => void;
+  clearSelection: () => void;
   setMarkovStage: (stage: MarkovStage) => void;
   setAlignmentFilter: <K extends keyof AlignmentFilters>(
     key: K,
     value: AlignmentFilters[K],
   ) => void;
+  resetAlignmentFilters: () => void;
   openDetails: () => void;
   closeDetails: () => void;
 }
@@ -44,6 +46,12 @@ export const useVizStore = create<VizState>((set) => ({
   clearBrush: () => set({ brushedActorIds: new Set() }),
   selectActor: (actorId) => set({ selectedActorId: actorId }),
   selectSpike: (filmIndex) => set({ selectedFilmIndex: filmIndex }),
+  clearSelection: () =>
+    set({
+      selectedActorId: null,
+      selectedFilmIndex: null,
+      detailsOpen: false,
+    }),
   setMarkovStage: (stage) => set({ markovStage: stage }),
   setAlignmentFilter: (key, value) =>
     set((state) => ({
@@ -52,7 +60,7 @@ export const useVizStore = create<VizState>((set) => ({
         [key]: value,
       },
     })),
+  resetAlignmentFilters: () => set({ alignmentFilters: DEFAULT_ALIGNMENT_FILTERS }),
   openDetails: () => set({ detailsOpen: true }),
   closeDetails: () => set({ detailsOpen: false }),
 }));
-
