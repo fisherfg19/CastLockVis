@@ -52,7 +52,7 @@
 - [x] **F3.1 / F3.2** ClusterView 静态散点：`projection` 坐标 + `dominantEarlyGenre` 着色 + 悬停 Tooltip（已增强：簇图标 + 凸包）
 - [x] **F6.1 / F6.2 / F6.5** MarkovView 静态热力矩阵：色阶 + 行列标签 + 单元格 Tooltip + 对角线强调
 - [x] **F6.3** MarkovView 阶段切换 Toggle（early/mid/late，写 `markovStage`）
-- [ ] **F3.3 / F3.4** ClusterView `BrushLayer` 框选 → 写 `brushedActorIds` + 选中/降明度视觉态
+- [~] **F3.3 / F3.4** ClusterView `BrushLayer` 框选 → 写 `brushedActorIds` + 选中/降明度视觉态
 - [~] **F8.1（A→D 部分）/ F6.4** 联动：selectors（`getDominantClusterId`→`getMarkovMatrixForCohort`）+ App 接线已就绪，D 已按主簇渲染；仅差 brush 触发端（F3.4）即可全闭环
 
 **验收**：在 A 框选一个群落，D 立即切换为该群落矩阵；切换阶段 Toggle 矩阵随之更新；清除选区回到全局态。
@@ -74,7 +74,7 @@
 
 > 把四视图焊成一个分析闭环。本里程碑权重最高。
 
-- [ ] **F4.4** 链路 1 消费端：RiverView 响应 `brushedActorIds` 渲染**群落平均叠加态**熵衰减
+- [~] **F4.4** 链路 1 消费端：RiverView 响应 `brushedActorIds` 渲染**群落平均叠加态**熵衰减
 - [ ] **F8.1** 链路 1 完整收口：A.brush → B（平均态）+ D（cohort×stage）同步联动
 - [ ] **F4.5** 链路 2 触发：RiverView 熵曲线尖峰可点击 → 写 `selectedActorId + selectedFilmIndex`
 - [ ] **F5.3** 链路 2 消费：AlignmentView 高亮该演员 + 对齐同序号尝试转型的同侪
