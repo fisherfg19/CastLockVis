@@ -17,7 +17,7 @@ df_basics = pd.read_csv(
     os.path.join(DATA_DIR, 'title.basics.tsv.gz'), 
     sep='\t', 
     na_values='\\N',
-    usecols=['tconst', 'titleType', 'startYear', 'genres']
+    usecols=['tconst', 'primaryTitle', 'titleType', 'startYear', 'genres']
 )
 # 核心过滤：只保留“电影”，剔除无类型的脏数据，剔除缺失年份的数据
 df_movies = df_basics[
@@ -68,20 +68,42 @@ df_actors = df_principals[
 del df_principals
 
 print("5. 读取 name.basics (获取演员姓名与出生年份)...")
+valid_director_ids = {
+    director_id
+    for directors in df_crew['director'].dropna()
+    for director_id in str(directors).split(',')
+    if director_id
+}
+valid_actor_ids = set(df_actors['nconst'])
 df_names = pd.read_csv(
     os.path.join(DATA_DIR, 'name.basics.tsv.gz'), 
     sep='\t', 
     na_values='\\N',
     usecols=['nconst', 'primaryName', 'birthYear']
 )
-# 提取参与过有效电影的演员名
-valid_actor_ids = set(df_actors['nconst'])
-df_names = df_names[df_names['nconst'].isin(valid_actor_ids)]
+# 提取参与过有效电影的演员名和导演名
+df_names = df_names[df_names['nconst'].isin(valid_actor_ids | valid_director_ids)]
+director_name_by_id = df_names.set_index('nconst')['primaryName'].dropna().to_dict()
+df_actor_names = df_names[df_names['nconst'].isin(valid_actor_ids)].copy()
+
+
+def display_director_names(directors):
+    if pd.isna(directors):
+        return 'Unknown'
+    names = [
+        director_name_by_id.get(director_id, director_id)
+        for director_id in str(directors).split(',')
+        if director_id
+    ]
+    return ', '.join(names) if names else 'Unknown'
+
+
+df_crew['directorName'] = df_crew['director'].apply(display_director_names)
 
 print("6. 开始合并：构建演员职业生涯多维展平表...")
 # 依次将评分表、姓名年龄表、导演表 Join 起来
 df_master = pd.merge(df_actors, df_valid_movies, on='tconst', how='left')
-df_master = pd.merge(df_master, df_names, on='nconst', how='left')
+df_master = pd.merge(df_master, df_actor_names, on='nconst', how='left')
 df_master = pd.merge(df_master, df_crew, on='tconst', how='left')
 
 # 按演员分组，并在组内按电影发行年份进行升序排序，保证时序严格正确

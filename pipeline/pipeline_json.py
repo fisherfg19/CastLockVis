@@ -29,6 +29,29 @@ genre_counts = Counter(all_genres)
 valid_genres = [g for g, c in genre_counts.items() if c > 50]
 genre_to_idx = {g: i for i, g in enumerate(valid_genres)}
 
+
+def display_title(row):
+    """优先使用 Step 1 带出的 primaryTitle；旧 CSV 无该列时回退 tconst。"""
+    title = row.get('primaryTitle')
+    if title is not None and not pd.isna(title) and str(title).strip():
+        return str(title)
+    return str(row.get('tconst', 'Unknown'))
+
+
+def display_director_name(row):
+    """优先使用清洗阶段映射出的 directorName；旧 CSV 无该列时回退 director id。"""
+    director_name = row.get('directorName')
+    if director_name is not None and not pd.isna(director_name) and str(director_name).strip():
+        return str(director_name)
+    return str(row.get('director', 'Unknown'))
+
+
+def director_heterogeneity_at(seq, index):
+    """以当前作品为中心的 ±2 作品窗口内导演集合大小，供 films.json 逐片审计。"""
+    window = seq[max(0, index - 2):index + 3]
+    directors = {str(item.get('director', '')) for item in window if str(item.get('director', '')).strip()}
+    return len(directors)
+
 print("2. 执行特征工程与序列化...")
 actors_dict = {}
 films_list = []
@@ -117,13 +140,16 @@ for nconst, group in df.groupby('nconst'):
     }
     
     # --- D. 组装 Films 表 ---
-    for m in seq:
+    for film_index, m in enumerate(seq):
         films_list.append({
-            "actorId": nconst, "seqIndex": m['seqIndex'], "title": m['tconst'], # 若有primaryTitle请替换
+            "actorId": nconst, "seqIndex": m['seqIndex'],
+            "titleId": str(m.get('tconst', 'Unknown')), "title": display_title(m),
             "year": m['startYear'], "genres": m['genres_list'], 
             "dominantGenre": m['genres_list'][0] if m['genres_list'] else "Unknown",
             "rating": float(m['averageRating']), "numVotes": int(m['numVotes']),
-            "directorId": str(m.get('director', 'Unknown'))
+            "directorId": str(m.get('director', 'Unknown')),
+            "directorName": display_director_name(m),
+            "directorHeterogeneity": director_heterogeneity_at(seq, film_index),
         })
 
 print("3. 执行 UMAP 降维与 KMeans 聚类...")
