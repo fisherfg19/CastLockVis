@@ -1,4 +1,7 @@
 .details-panel {
+  --details-panel-x: 0px;
+  --details-panel-y: 0px;
+
   position: fixed;
   right: var(--space-4);
   bottom: var(--space-4);
@@ -13,6 +16,19 @@
   background: color-mix(in srgb, var(--color-surface) 96%, var(--color-bg));
   box-shadow: 0 18px 48px color-mix(in srgb, var(--color-bg) 70%, transparent);
   padding: var(--space-4);
+  transform: translate(var(--details-panel-x), var(--details-panel-y));
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 120ms ease;
+}
+
+.details-panel:focus-within,
+.details-panel:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 54%, var(--color-border));
+  box-shadow:
+    0 18px 48px color-mix(in srgb, var(--color-bg) 70%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
 .details-panel__header {
@@ -58,6 +74,36 @@
   color: var(--color-text);
 }
 
+.details-panel__move {
+  display: grid;
+  grid-template-columns: repeat(5, 28px);
+  gap: var(--space-1);
+  justify-content: end;
+  border-bottom: var(--border);
+  padding-bottom: var(--space-3);
+}
+
+.details-panel__move button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-chart-bg) 82%, var(--color-surface));
+  color: var(--color-text-dim);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.details-panel__move button:hover,
+.details-panel__move button:focus-visible {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  outline: none;
+}
+
 .details-panel__section {
   display: grid;
   gap: var(--space-2);
@@ -90,8 +136,11 @@
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--color-text);
-  font-family: var(--font-mono);
   font-size: var(--fs-sm);
+}
+
+.details-grid__value--code {
+  font-family: var(--font-mono);
 }
 
 .signal-grid {
@@ -128,4 +177,23 @@
 
 .signal-card__delta--down {
   color: var(--color-snapback);
+}
+
+@media (max-width: 760px) {
+  .details-panel {
+    right: var(--space-2);
+    bottom: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    max-height: min(68vh, 560px);
+    padding: var(--space-3);
+  }
+
+  .details-panel__move {
+    justify-content: start;
+  }
+
+  .signal-grid {
+    grid-template-columns: 1fr;
+  }
 }

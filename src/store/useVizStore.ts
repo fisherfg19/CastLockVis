@@ -7,6 +7,11 @@ export interface AlignmentFilters {
   numVotes: [number, number];
 }
 
+export interface DetailsPanelPosition {
+  x: number;
+  y: number;
+}
+
 interface VizState {
   brushedActorIds: Set<string>;
   selectedActorId: string | null;
@@ -14,6 +19,7 @@ interface VizState {
   markovStage: MarkovStage;
   alignmentFilters: AlignmentFilters;
   detailsOpen: boolean;
+  detailsPanelPosition: DetailsPanelPosition;
   setBrush: (actorIds: Iterable<string>) => void;
   clearBrush: () => void;
   selectActor: (actorId: string | null) => void;
@@ -25,6 +31,8 @@ interface VizState {
   ) => void;
   openDetails: () => void;
   closeDetails: () => void;
+  moveDetailsPanel: (delta: DetailsPanelPosition) => void;
+  resetDetailsPanelPosition: () => void;
 }
 
 const DEFAULT_ALIGNMENT_FILTERS: AlignmentFilters = {
@@ -40,6 +48,7 @@ export const useVizStore = create<VizState>((set) => ({
   markovStage: 'early',
   alignmentFilters: DEFAULT_ALIGNMENT_FILTERS,
   detailsOpen: false,
+  detailsPanelPosition: { x: 0, y: 0 },
   setBrush: (actorIds) => set({ brushedActorIds: new Set(actorIds) }),
   clearBrush: () => set({ brushedActorIds: new Set() }),
   selectActor: (actorId) => set({ selectedActorId: actorId }),
@@ -54,4 +63,12 @@ export const useVizStore = create<VizState>((set) => ({
     })),
   openDetails: () => set({ detailsOpen: true }),
   closeDetails: () => set({ detailsOpen: false }),
+  moveDetailsPanel: (delta) =>
+    set((state) => ({
+      detailsPanelPosition: {
+        x: state.detailsPanelPosition.x + delta.x,
+        y: state.detailsPanelPosition.y + delta.y,
+      },
+    })),
+  resetDetailsPanelPosition: () => set({ detailsPanelPosition: { x: 0, y: 0 } }),
 }));

@@ -1,11 +1,16 @@
 import { useMemo } from 'react';
 import { DetailsPanel } from './components/DetailsPanel';
+import { InteractionGuide } from './components/InteractionGuide';
 import { ViewPanel } from './components/ViewPanel';
 import { Toggle } from './components/controls/Toggle';
 import { useDataRuntime } from './data/dataRuntimeContext';
 import type { MarkovStage } from './data/types';
-import { getCohortActorIds, getDominantClusterId, getMarkovMatrixForCohort } from './store/selectors';
-import { useVizStore } from './store/useVizStore';
+import {
+  getCohortActorIds,
+  getDominantClusterId,
+  getMarkovMatrixForCohort,
+} from './store/selectors';
+import { type AlignmentFilters, useVizStore } from './store/useVizStore';
 import { AlignmentSampleView } from './views/static-samples/AlignmentSampleView';
 import { ClusterSampleView } from './views/static-samples/ClusterSampleView';
 import { MarkovSampleView } from './views/static-samples/MarkovSampleView';
@@ -26,6 +31,17 @@ interface ReadyPanel {
   legend: JSX.Element;
   content: JSX.Element;
   toolbar?: JSX.Element;
+}
+
+interface ReadyInteractionState {
+  totalActors: number;
+  cohortActorCount: number;
+  dominantClusterId: number | null;
+  selectedActorName: string | null;
+  selectedFilmIndex: number | null;
+  stage: MarkovStage;
+  filtersActive: boolean;
+  detailsOpen: boolean;
 }
 
 const PANEL_TITLES = [
@@ -53,6 +69,10 @@ function StageToggle() {
   );
 }
 
+function hasConstrainedFilters(filters: AlignmentFilters) {
+  return Object.values(filters).some(([min, max]) => Number.isFinite(min) || Number.isFinite(max));
+}
+
 export function App() {
   const loadState = useDataRuntime();
   const stage = useVizStore((state) => state.markovStage);
@@ -61,6 +81,8 @@ export function App() {
   // 其余视图（A/C/D、DetailsPanel）自取 store，App 在此保持薄壳。
   const selectedActorId = useVizStore((state) => state.selectedActorId);
   const selectedFilmIndex = useVizStore((state) => state.selectedFilmIndex);
+  const alignmentFilters = useVizStore((state) => state.alignmentFilters);
+  const detailsOpen = useVizStore((state) => state.detailsOpen);
   const selectActor = useVizStore((state) => state.selectActor);
   const selectSpike = useVizStore((state) => state.selectSpike);
   const openDetails = useVizStore((state) => state.openDetails);
@@ -71,6 +93,39 @@ export function App() {
     }
     return `数据已加载：genres=${loadState.bundle.genres.length} · actors=${loadState.bundle.actors.length} · films=${loadState.bundle.films.length} · entropy=${loadState.bundle.entropy.length} · markov=${loadState.bundle.markov.length} · alignment=${loadState.bundle.alignment.length}`;
   }, [loadState]);
+
+  const readyInteraction = useMemo<ReadyInteractionState | null>(() => {
+    if (loadState.status !== 'ready') {
+      return null;
+    }
+
+    const allActorIds = loadState.bundle.actors.map((actor) => actor.id);
+    const cohortActorIds = getCohortActorIds(allActorIds, brushedActorIds);
+    const dominantClusterId = getDominantClusterId(loadState.indexes, cohortActorIds);
+    const selectedActorName =
+      selectedActorId !== null
+        ? (loadState.indexes.actorsById.get(selectedActorId)?.name ?? null)
+        : null;
+
+    return {
+      totalActors: allActorIds.length,
+      cohortActorCount: cohortActorIds.length,
+      dominantClusterId,
+      selectedActorName,
+      selectedFilmIndex,
+      stage,
+      filtersActive: hasConstrainedFilters(alignmentFilters),
+      detailsOpen,
+    };
+  }, [
+    alignmentFilters,
+    brushedActorIds,
+    detailsOpen,
+    loadState,
+    selectedActorId,
+    selectedFilmIndex,
+    stage,
+  ]);
 
   const readyPanels = useMemo(() => {
     if (loadState.status !== 'ready') {
@@ -147,6 +202,8 @@ export function App() {
       </header>
 
       {loadState.status === 'ready' && <GenreColorLegend genres={loadState.bundle.genres} />}
+
+      {readyInteraction && <InteractionGuide {...readyInteraction} />}
 
       <section className="app-grid">
         {loadState.status !== 'ready' &&

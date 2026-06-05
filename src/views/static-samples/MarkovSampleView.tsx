@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ChartTooltip } from '../../components/common/ChartTooltip';
 import type { MarkovMatrix } from '../../data/types';
 import { linearScale } from './chartUtils';
 
@@ -25,7 +26,10 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
     }
 
     const n = matrix.genres.length;
-    const gridSize = Math.min(WIDTH - MARGIN.left - MARGIN.right, HEIGHT - MARGIN.top - MARGIN.bottom);
+    const gridSize = Math.min(
+      WIDTH - MARGIN.left - MARGIN.right,
+      HEIGHT - MARGIN.top - MARGIN.bottom,
+    );
     const cellSize = gridSize / n;
 
     const cells = matrix.matrix.flatMap((row, rowIndex) =>
@@ -73,7 +77,13 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
         {matrix.genres.map((genre, index) => {
           const y = MARGIN.top + index * chart.cellSize + chart.cellSize * 0.65;
           return (
-            <text key={`row-${genre}`} x={MARGIN.left - 8} y={y} className="sample-matrix-label" textAnchor="end">
+            <text
+              key={`row-${genre}`}
+              x={MARGIN.left - 8}
+              y={y}
+              className="sample-matrix-label"
+              textAnchor="end"
+            >
               {shortGenre(genre)}
             </text>
           );
@@ -97,12 +107,15 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
         })}
       </svg>
 
-      <figcaption className="sample-chart__caption">
-        cohort {matrix.cohortId} · stage {matrix.stage}
-        {hoverCell
-          ? ` · ${matrix.genres[hoverCell.col]} → ${matrix.genres[hoverCell.row]} = ${hoverCell.value.toFixed(3)}`
-          : ' · hover cell 查看转移概率'}
-      </figcaption>
+      <ChartTooltip
+        label={`cohort ${matrix.cohortId} · stage ${matrix.stage}`}
+        detail={
+          hoverCell
+            ? `${matrix.genres[hoverCell.col]} → ${matrix.genres[hoverCell.row]} = ${hoverCell.value.toFixed(3)}`
+            : 'hover cell 查看转移概率'
+        }
+        tone={hoverCell ? 'active' : 'default'}
+      />
     </figure>
   );
 }

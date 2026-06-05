@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { ChartTooltip } from '../../components/common/ChartTooltip';
 import { averageEntropyCurves } from '../../lib/aggregate';
 import type { DataBundle, DataIndexes, EntropyCurve, EntropyPoint } from '../../data/types';
 import { buildGenreTokenLookup, linearScale, pathFromBands, polylinePath } from './chartUtils';
@@ -127,7 +128,7 @@ export function RiverSampleView({
         })}
       </svg>
 
-      <figcaption className="sample-chart__caption">{chart.caption}</figcaption>
+      <ChartTooltip label={chart.caption} />
     </figure>
   );
 }

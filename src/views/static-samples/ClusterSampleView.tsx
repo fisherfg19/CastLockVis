@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { ChartTooltip } from '../../components/common/ChartTooltip';
 import type { Actor } from '../../data/types';
 import { useVizStore } from '../../store/useVizStore';
 import {
@@ -42,7 +43,12 @@ interface ChartPoint {
 }
 
 /** 找到离 (x,y) 最近、且在命中半径内的演员点。 */
-function nearestPoint(points: ChartPoint[], x: number, y: number, radius: number): ChartPoint | null {
+function nearestPoint(
+  points: ChartPoint[],
+  x: number,
+  y: number,
+  radius: number,
+): ChartPoint | null {
   let best: ChartPoint | null = null;
   let bestDistSq = radius * radius;
   for (const point of points) {
@@ -228,6 +234,20 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
   };
 
   const hasBrush = brushedActorIds.size > 0;
+  const tooltipLabel = hoveredActor
+    ? hoveredActor.name
+    : hasBrush
+      ? `框选 ${brushedActorIds.size} 位演员`
+      : selectedActor
+        ? `已选中 ${selectedActor.name}`
+        : `Actors: ${actors.length}`;
+  const tooltipDetail = hoveredActor
+    ? `cluster ${hoveredActor.clusterId} · early=${hoveredActor.dominantEarlyGenre}`
+    : hasBrush
+      ? '点击空白清除选区'
+      : selectedActor
+        ? `cluster ${selectedActor.clusterId} · 单击演员切换 / 点空白清除`
+        : `clusters: ${chart.hulls.length} · 单击选演员 · 拖框选群落`;
 
   return (
     <figure className="sample-chart sample-chart--cluster">
@@ -243,10 +263,24 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
         <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="sample-bg" rx={8} />
 
         {chart.tickXs.map((x) => (
-          <line key={`vx-${x}`} x1={x} y1={MARGIN.top} x2={x} y2={HEIGHT - MARGIN.bottom} className="sample-grid" />
+          <line
+            key={`vx-${x}`}
+            x1={x}
+            y1={MARGIN.top}
+            x2={x}
+            y2={HEIGHT - MARGIN.bottom}
+            className="sample-grid"
+          />
         ))}
         {chart.tickYs.map((y) => (
-          <line key={`hy-${y}`} x1={MARGIN.left} y1={y} x2={WIDTH - MARGIN.right} y2={y} className="sample-grid" />
+          <line
+            key={`hy-${y}`}
+            x1={MARGIN.left}
+            y1={y}
+            x2={WIDTH - MARGIN.right}
+            y2={y}
+            className="sample-grid"
+          />
         ))}
 
         <line
@@ -256,7 +290,13 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
           y2={HEIGHT - MARGIN.bottom}
           className="sample-axis"
         />
-        <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={HEIGHT - MARGIN.bottom} className="sample-axis" />
+        <line
+          x1={MARGIN.left}
+          y1={MARGIN.top}
+          x2={MARGIN.left}
+          y2={HEIGHT - MARGIN.bottom}
+          className="sample-axis"
+        />
 
         {/* 群落凸包：颜色按 clusterId，圈出每个 cohort 的占位区域 */}
         {chart.hulls.map((hull) => {
@@ -316,15 +356,11 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
         )}
       </svg>
 
-      <figcaption className="sample-chart__caption">
-        {hoveredActor
-          ? `${hoveredActor.name} · cluster ${hoveredActor.clusterId} · early=${hoveredActor.dominantEarlyGenre}`
-          : hasBrush
-            ? `框选 ${brushedActorIds.size} 位演员 · 点击空白清除选区`
-            : selectedActor
-              ? `已选中 ${selectedActor.name} · cluster ${selectedActor.clusterId} · 单击演员切换 / 点空白清除`
-              : `Actors: ${actors.length} · clusters: ${chart.hulls.length} · 单击选演员 · 拖框选群落`}
-      </figcaption>
+      <ChartTooltip
+        label={tooltipLabel}
+        detail={tooltipDetail}
+        tone={hoveredActor ? 'active' : 'default'}
+      />
     </figure>
   );
 }

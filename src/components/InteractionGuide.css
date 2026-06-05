@@ -1,0 +1,86 @@
+.interaction-guide {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  border: var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-bg));
+  padding: var(--space-2) var(--space-4);
+}
+
+.interaction-guide__label {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.interaction-guide__items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.interaction-guide__item {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-bg) 22%, transparent);
+  padding: var(--space-1) var(--space-2);
+}
+
+.interaction-guide__item.is-active {
+  border-color: color-mix(in srgb, var(--color-accent) 76%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+
+.interaction-guide__title {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.interaction-guide__status,
+.interaction-guide__hint {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interaction-guide__hint {
+  color: color-mix(in srgb, var(--color-accent) 72%, var(--color-text-dim));
+}
+
+@media (max-width: 1100px) {
+  .interaction-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .interaction-guide__items {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .interaction-guide {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .interaction-guide__item {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .interaction-guide__hint {
+    grid-column: 2;
+  }
+}

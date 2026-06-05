@@ -12,10 +12,14 @@
   --space-8: 32px;
 
   /* 布局尺寸（骨架阶段） */
+  --app-min-width: 720px;
+  --panel-min-width: 520px;
+  --chart-min-height: 220px;
+  --chart-mobile-min-height: 260px;
   --panel-state-min-height: 120px;
   --panel-toolbar-min-height: 20px;
   --panel-legend-min-height: 26px;
-  --panel-mobile-row-min-height: 220px;
+  --panel-mobile-row-min-height: 360px;
 
   /* 圆角 / 边框 */
   --radius-sm: 4px;

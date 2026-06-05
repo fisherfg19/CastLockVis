@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ChartTooltip } from '../../components/common/ChartTooltip';
 import type { AlignmentPoint, AlignmentTrack, AlignmentTrackPivot } from '../../data/types';
 import { alignmentTrackInFilter } from '../../lib/aggregate';
 import { RangeSlider } from '../../components/controls/RangeSlider';
@@ -39,7 +40,10 @@ interface TrackGeom {
   path: string;
 }
 
-const Y_AXIS_META: Record<YAxisMode, { label: string; accessor: (p: AlignmentPoint) => number; anchorZero: boolean }> = {
+const Y_AXIS_META: Record<
+  YAxisMode,
+  { label: string; accessor: (p: AlignmentPoint) => number; anchorZero: boolean }
+> = {
   dist: { label: '类型偏离度（距舒适圈）', accessor: (p) => p.dist, anchorZero: true },
   entropy: { label: '类型熵 (entropy)', accessor: (p) => p.entropy, anchorZero: false },
 };
@@ -60,7 +64,9 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
   const domains = useMemo(() => {
     const pivots = tracks.filter((track): track is AlignmentTrackPivot => track.outcome !== 'none');
     return {
-      directorHeterogeneity: domainOf(pivots.map((track) => track.covariatesAtT0.directorHeterogeneity)),
+      directorHeterogeneity: domainOf(
+        pivots.map((track) => track.covariatesAtT0.directorHeterogeneity),
+      ),
       rating: domainOf(pivots.map((track) => track.covariatesAtT0.rating)),
       numVotes: domainOf(pivots.map((track) => track.covariatesAtT0.numVotes)),
     };
@@ -141,7 +147,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
 
     const selectedGeom =
       selectedActorId !== null
-        ? trackGeoms.find((geom) => geom.actorId === selectedActorId) ?? null
+        ? (trackGeoms.find((geom) => geom.actorId === selectedActorId) ?? null)
         : null;
     const selectedClusterId = selectedGeom ? selectedGeom.clusterId : null;
     // 选中作品序号 → 对齐辅助线位置（仅信息提示，不参与同侪判定）。
@@ -210,6 +216,15 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
   if (!geometry || !view) {
     return <div className="sample-chart__empty">alignment.json 无可用分叉轨迹。</div>;
   }
+
+  const tooltipDetail = [
+    `success=${view.summary.success}`,
+    `snapback=${view.summary.snapback}`,
+    selectedActorId !== null ? `同群落同侪 ${view.peerCount}` : null,
+    view.selectedTau !== null ? `选中 τ=${view.selectedTau}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <figure className="sample-chart sample-chart--alignment">
@@ -297,12 +312,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
               y2={tick.y}
               className="sample-axis"
             />
-            <text
-              x={MARGIN.left - 8}
-              y={tick.y + 3}
-              className="sample-axis-tick"
-              textAnchor="end"
-            >
+            <text x={MARGIN.left - 8} y={tick.y + 3} className="sample-axis-tick" textAnchor="end">
               {tick.value.toFixed(2)}
             </text>
           </g>
@@ -340,7 +350,10 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
           <path d={view.contextInSnapbackD} className="sample-track sample-track--snapback" />
         )}
         {view.peerSuccessD && (
-          <path d={view.peerSuccessD} className="sample-track sample-track--success sample-track--peer" />
+          <path
+            d={view.peerSuccessD}
+            className="sample-track sample-track--success sample-track--peer"
+          />
         )}
         {view.peerSnapbackD && (
           <path
@@ -399,12 +412,11 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
         </text>
       </svg>
 
-      <figcaption className="sample-chart__caption">
-        τ 范围 [{geometry.tauMin}, {geometry.tauMax}] · success={view.summary.success} · snapback=
-        {view.summary.snapback}
-        {selectedActorId !== null ? ` · 同群落同侪 ${view.peerCount}` : ''}
-        {view.selectedTau !== null ? ` · 选中 τ=${view.selectedTau}` : ''}
-      </figcaption>
+      <ChartTooltip
+        label={`τ 范围 [${geometry.tauMin}, ${geometry.tauMax}]`}
+        detail={tooltipDetail}
+        tone={selectedActorId !== null ? 'active' : 'default'}
+      />
     </figure>
   );
 }

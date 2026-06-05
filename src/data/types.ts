@@ -18,12 +18,15 @@ export interface Film {
   actorId: string;
   seqIndex: number;
   title: string;
+  titleId?: string;
   year: number;
   genres: string[];
   dominantGenre: string;
   rating: number;
   numVotes: number;
   directorId: string;
+  directorName?: string;
+  directorHeterogeneity: number;
 }
 
 export interface EntropyPoint {

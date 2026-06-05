@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { useEffect } from 'react';
 import { useDataRuntime } from '../data/dataRuntimeContext';
 import { useVizStore } from '../store/useVizStore';
 import type { Actor, AlignmentTrack, DataIndexes, Film } from '../data/types';
@@ -19,6 +21,41 @@ export function DetailsPanel() {
   const selectedActorId = useVizStore((state) => state.selectedActorId);
   const selectedFilmIndex = useVizStore((state) => state.selectedFilmIndex);
   const closeDetails = useVizStore((state) => state.closeDetails);
+  const detailsPanelPosition = useVizStore((state) => state.detailsPanelPosition);
+  const moveDetailsPanel = useVizStore((state) => state.moveDetailsPanel);
+  const resetDetailsPanelPosition = useVizStore((state) => state.resetDetailsPanelPosition);
+
+  useEffect(() => {
+    if (!detailsOpen) {
+      return undefined;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!event.key.startsWith('Arrow')) {
+        return;
+      }
+      if (isEditableTarget(event.target)) {
+        return;
+      }
+
+      const step = event.shiftKey ? 96 : 24;
+      const deltas: Record<string, { x: number; y: number }> = {
+        ArrowUp: { x: 0, y: -step },
+        ArrowRight: { x: step, y: 0 },
+        ArrowDown: { x: 0, y: step },
+        ArrowLeft: { x: -step, y: 0 },
+      };
+      const delta = deltas[event.key];
+      if (!delta) {
+        return;
+      }
+      event.preventDefault();
+      moveDetailsPanel(delta);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [detailsOpen, moveDetailsPanel]);
 
   if (!detailsOpen || runtime.status !== 'ready') {
     return null;
@@ -27,9 +64,20 @@ export function DetailsPanel() {
   const details = getDetailContext(runtime.indexes, selectedActorId, selectedFilmIndex);
   const ratingDelta = diff(details.film?.rating, details.previousFilm?.rating);
   const votesDelta = diff(details.film?.numVotes, details.previousFilm?.numVotes);
+  const selectedTitle = details.film ? formatFilmTitle(details.film) : 'No work selected';
+  const selectedDirector = details.film ? formatDirector(details.film) : 'n/a';
 
   return (
-    <aside className="details-panel" aria-label="Selected transformation details">
+    <aside
+      className="details-panel"
+      style={
+        {
+          '--details-panel-x': `${detailsPanelPosition.x}px`,
+          '--details-panel-y': `${detailsPanelPosition.y}px`,
+        } as CSSProperties
+      }
+      aria-label="Selected transformation details"
+    >
       <header className="details-panel__header">
         <div>
           <h2 className="details-panel__title">Transformation Detail</h2>
@@ -46,6 +94,39 @@ export function DetailsPanel() {
           Close
         </button>
       </header>
+      <div className="details-panel__move" aria-label="Move details panel with arrow controls">
+        <button
+          type="button"
+          onClick={() => moveDetailsPanel({ x: 0, y: -24 })}
+          aria-label="Move up"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          onClick={() => moveDetailsPanel({ x: -24, y: 0 })}
+          aria-label="Move left"
+        >
+          ←
+        </button>
+        <button type="button" onClick={resetDetailsPanelPosition} aria-label="Reset panel position">
+          ·
+        </button>
+        <button
+          type="button"
+          onClick={() => moveDetailsPanel({ x: 24, y: 0 })}
+          aria-label="Move right"
+        >
+          →
+        </button>
+        <button
+          type="button"
+          onClick={() => moveDetailsPanel({ x: 0, y: 24 })}
+          aria-label="Move down"
+        >
+          ↓
+        </button>
+      </div>
 
       {!details.film ? (
         <div className="details-panel__empty">No film found for the selected spike.</div>
@@ -54,11 +135,24 @@ export function DetailsPanel() {
           <section className="details-panel__section">
             <h3 className="details-panel__section-title">Selected Work</h3>
             <dl className="details-grid">
-              <DetailTerm label="seqIndex" value={`N${details.film.seqIndex}`} />
-              <DetailTerm label="title" value={details.film.title} />
-              <DetailTerm label="year" value={details.film.year} />
+              <DetailTerm label="seqIndex" value={`N${details.film.seqIndex}`} tone="code" />
+              <DetailTerm
+                label={isImdbTitleId(details.film.title) ? 'titleId' : 'title'}
+                value={selectedTitle}
+                tone={isImdbTitleId(details.film.title) ? 'code' : 'text'}
+              />
+              <DetailTerm label="year" value={details.film.year} tone="code" />
               <DetailTerm label="genre" value={details.film.dominantGenre} />
-              <DetailTerm label="director" value={details.film.directorId} />
+              <DetailTerm
+                label={details.film.directorName ? 'director' : 'directorId'}
+                value={selectedDirector}
+                tone={details.film.directorName ? 'text' : 'code'}
+              />
+              <DetailTerm
+                label="directorHet"
+                value={details.film.directorHeterogeneity}
+                tone="code"
+              />
             </dl>
           </section>
 
@@ -88,10 +182,12 @@ export function DetailsPanel() {
               <DetailTerm
                 label="t0Index"
                 value={details.alignment?.t0Index ?? details.actor?.t0Index ?? 'n/a'}
+                tone="code"
               />
               <DetailTerm
                 label="cluster"
                 value={details.alignment?.clusterId ?? details.actor?.clusterId ?? 'n/a'}
+                tone="code"
               />
               <DetailTerm
                 label="rating@T0"
@@ -101,6 +197,7 @@ export function DetailsPanel() {
                     ? 'n/a'
                     : details.alignment.covariatesAtT0.rating.toFixed(1)
                 }
+                tone="code"
               />
               <DetailTerm
                 label="votes@T0"
@@ -110,10 +207,12 @@ export function DetailsPanel() {
                     ? 'n/a'
                     : formatNumber(details.alignment.covariatesAtT0.numVotes)
                 }
+                tone="code"
               />
               <DetailTerm
                 label="directorHet"
                 value={details.alignment?.covariatesAtT0.directorHeterogeneity ?? 'n/a'}
+                tone="code"
               />
             </dl>
           </section>
@@ -128,6 +227,18 @@ export function DetailsPanel() {
         </>
       )}
     </aside>
+  );
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  return (
+    target.isContentEditable ||
+    target.tagName === 'INPUT' ||
+    target.tagName === 'TEXTAREA' ||
+    target.tagName === 'SELECT'
   );
 }
 
@@ -150,13 +261,43 @@ function getDetailContext(
   };
 }
 
-function DetailTerm({ label, value }: { label: string; value: string | number }) {
+function DetailTerm({
+  label,
+  value,
+  tone = 'text',
+}: {
+  label: string;
+  value: string | number;
+  tone?: 'text' | 'code';
+}) {
   return (
     <>
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd className={tone === 'code' ? 'details-grid__value--code' : undefined}>{value}</dd>
     </>
   );
+}
+
+function isImdbTitleId(value: string): boolean {
+  return /^tt\d+$/.test(value);
+}
+
+function formatFilmTitle(film: Film): string {
+  if (!isImdbTitleId(film.title)) {
+    return film.title;
+  }
+  return film.titleId ? film.titleId : `IMDb title ${film.title}`;
+}
+
+function formatDirector(film: Film): string {
+  const name = film.directorName?.trim();
+  if (name) {
+    return name;
+  }
+  if (!film.directorId || film.directorId === 'Unknown') {
+    return 'Unknown';
+  }
+  return `IMDb person ${film.directorId}`;
 }
 
 function SignalCard({

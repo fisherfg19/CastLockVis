@@ -132,7 +132,8 @@ function parseFilms(raw: unknown): Film[] {
       typeof film.dominantGenre !== 'string' ||
       typeof film.rating !== 'number' ||
       typeof film.numVotes !== 'number' ||
-      typeof film.directorId !== 'string'
+      typeof film.directorId !== 'string' ||
+      typeof film.directorHeterogeneity !== 'number'
     ) {
       throw createTypeError('films.json', `index ${index} has invalid fields`);
     }
@@ -141,12 +142,15 @@ function parseFilms(raw: unknown): Film[] {
       actorId: film.actorId,
       seqIndex: film.seqIndex,
       title: film.title,
+      titleId: typeof film.titleId === 'string' ? film.titleId : undefined,
       year: film.year,
       genres: film.genres,
       dominantGenre: film.dominantGenre,
       rating: film.rating,
       numVotes: film.numVotes,
       directorId: film.directorId,
+      directorName: typeof film.directorName === 'string' ? film.directorName : undefined,
+      directorHeterogeneity: film.directorHeterogeneity,
     };
   });
 }
@@ -313,7 +317,12 @@ function parseAlignment(raw: unknown): AlignmentTrack[] {
 }
 
 function parseGenres(raw: unknown): string[] {
-  return requireArray(raw, (entry): entry is string => typeof entry === 'string', 'genres.json', 'root is not string[]');
+  return requireArray(
+    raw,
+    (entry): entry is string => typeof entry === 'string',
+    'genres.json',
+    'root is not string[]',
+  );
 }
 
 export function buildIndexes(bundle: DataBundle): DataIndexes {
@@ -347,15 +356,14 @@ export function buildIndexes(bundle: DataBundle): DataIndexes {
 }
 
 async function loadDataBundleInternal(): Promise<DataBundle> {
-  const [rawGenres, rawActors, rawFilms, rawEntropy, rawMarkov, rawAlignment] =
-    await Promise.all([
-      fetchJson(DATA_PATHS.genres),
-      fetchJson(DATA_PATHS.actors),
-      fetchJson(DATA_PATHS.films),
-      fetchJson(DATA_PATHS.entropy),
-      fetchJson(DATA_PATHS.markov),
-      fetchJson(DATA_PATHS.alignment),
-    ]);
+  const [rawGenres, rawActors, rawFilms, rawEntropy, rawMarkov, rawAlignment] = await Promise.all([
+    fetchJson(DATA_PATHS.genres),
+    fetchJson(DATA_PATHS.actors),
+    fetchJson(DATA_PATHS.films),
+    fetchJson(DATA_PATHS.entropy),
+    fetchJson(DATA_PATHS.markov),
+    fetchJson(DATA_PATHS.alignment),
+  ]);
 
   return {
     genres: parseGenres(rawGenres),
