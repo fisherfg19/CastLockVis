@@ -275,6 +275,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
             value={alignmentFilters.numVotes}
             onChange={(range) => setAlignmentFilter('numVotes', range)}
             format={formatCompact}
+            scale="log"
           />
           <button type="button" className="sample-axis-toggle" onClick={resetFilters}>
             重置
