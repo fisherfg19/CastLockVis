@@ -11,20 +11,20 @@ import {
   getMarkovMatrixForCohort,
 } from './store/selectors';
 import { type AlignmentFilters, useVizStore } from './store/useVizStore';
-import { AlignmentSampleView } from './views/static-samples/AlignmentSampleView';
-import { ClusterSampleView } from './views/static-samples/ClusterSampleView';
-import { MarkovSampleView } from './views/static-samples/MarkovSampleView';
+import { AlignmentView } from './views/AlignmentView';
+import { ClusterView } from './views/ClusterView';
+import { MarkovView } from './views/MarkovView';
 import {
   AlignmentLegend,
   ClusterLegend,
   GenreColorLegend,
   MarkovLegend,
   RiverLegend,
-} from './views/static-samples/PanelLegends';
-import { RiverSampleView } from './views/static-samples/RiverSampleView';
+} from './views/PanelLegends';
+import { RiverView } from './views/RiverView';
 import './App.css';
 import './components/DetailsPanel.css';
-import './views/static-samples/staticSamples.css';
+import './views/Views.css';
 
 interface ReadyPanel {
   title: string;
@@ -77,8 +77,8 @@ export function App() {
   const loadState = useDataRuntime();
   const stage = useVizStore((state) => state.markovStage);
   const brushedActorIds = useVizStore((state) => state.brushedActorIds);
-  // 视图 B（River）沿用 main 的 props 驱动：选中态 + spike 回调由 App 提供，
-  // 其余视图（A/C/D、DetailsPanel）自取 store，App 在此保持薄壳。
+  // 视图 B（River）的单演员/cohort 模式仍由 App 汇总后透传；
+  // 其余视图（A/C/D、DetailsPanel）直接订阅 store，App 保持布局与接线职责。
   const selectedActorId = useVizStore((state) => state.selectedActorId);
   const selectedFilmIndex = useVizStore((state) => state.selectedFilmIndex);
   const alignmentFilters = useVizStore((state) => state.alignmentFilters);
@@ -142,14 +142,14 @@ export function App() {
         title: PANEL_TITLES[0],
         legend: <ClusterLegend />,
         content: (
-          <ClusterSampleView actors={loadState.bundle.actors} genres={loadState.bundle.genres} />
+          <ClusterView actors={loadState.bundle.actors} genres={loadState.bundle.genres} />
         ),
       },
       {
         title: PANEL_TITLES[1],
         legend: <RiverLegend />,
         content: (
-          <RiverSampleView
+          <RiverView
             bundle={loadState.bundle}
             indexes={loadState.indexes}
             cohortActorIds={cohortActorIds}
@@ -167,13 +167,13 @@ export function App() {
       {
         title: PANEL_TITLES[2],
         legend: <AlignmentLegend />,
-        content: <AlignmentSampleView tracks={loadState.bundle.alignment} />,
+        content: <AlignmentView tracks={loadState.bundle.alignment} />,
       },
       {
         title: PANEL_TITLES[3],
         legend: <MarkovLegend />,
         toolbar: <StageToggle />,
-        content: <MarkovSampleView matrix={markovMatrix} />,
+        content: <MarkovView matrix={markovMatrix} />,
       },
     ];
 
@@ -194,7 +194,7 @@ export function App() {
       <header className="app-header">
         <h1 className="app-title">CastLock-Vis</h1>
         <p className="app-subtitle">
-          演员类型锁定与转型窗口期可视分析系统（S1 骨架 + S2/S3 静态样例）
+          演员类型锁定与转型窗口期可视分析系统（S5 联动基线 · S6 视觉定稿）
         </p>
         <div className="app-meta">
           <span className="status-text">{metaText}</span>

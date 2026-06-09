@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ChartTooltip } from '../../components/common/ChartTooltip';
-import type { MarkovMatrix } from '../../data/types';
+import { ChartTooltip } from '../components/common/ChartTooltip';
+import type { MarkovMatrix } from '../data/types';
 import { linearScale } from './chartUtils';
 
-interface MarkovSampleViewProps {
+interface MarkovViewProps {
   matrix: MarkovMatrix | null;
 }
 
@@ -17,7 +17,7 @@ interface HoverCell {
   value: number;
 }
 
-export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
+export function MarkovView({ matrix }: MarkovViewProps) {
   const [hoverCell, setHoverCell] = useState<HoverCell | null>(null);
 
   const chart = useMemo(() => {
@@ -52,13 +52,13 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
   }, [matrix]);
 
   if (!chart || !matrix) {
-    return <div className="sample-chart__empty">当前 stage 无可用矩阵。</div>;
+    return <div className="view-chart__empty">当前 stage 无可用矩阵。</div>;
   }
 
   return (
-    <figure className="sample-chart sample-chart--markov">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Markov Transition static sample">
-        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="sample-bg" rx={8} />
+    <figure className="view-chart view-chart--markov">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Markov Transition view">
+        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
 
         {chart.cells.map((cell) => (
           <rect
@@ -67,7 +67,7 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
             y={cell.y}
             width={chart.cellSize - 0.75}
             height={chart.cellSize - 0.75}
-            className={`sample-markov-cell ${cell.isDiagonal ? 'sample-markov-cell--diag' : ''}`}
+            className={`view-markov-cell ${cell.isDiagonal ? 'view-markov-cell--diag' : ''}`}
             style={{ opacity: cell.intensity / 100 }}
             onMouseEnter={() => setHoverCell({ row: cell.row, col: cell.col, value: cell.value })}
             onMouseLeave={() => setHoverCell(null)}
@@ -81,7 +81,7 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
               key={`row-${genre}`}
               x={MARGIN.left - 8}
               y={y}
-              className="sample-matrix-label"
+              className="view-matrix-label"
               textAnchor="end"
             >
               {shortGenre(genre)}
@@ -97,7 +97,7 @@ export function MarkovSampleView({ matrix }: MarkovSampleViewProps) {
               key={`col-${genre}`}
               x={x}
               y={y}
-              className="sample-matrix-label sample-matrix-label--x"
+              className="view-matrix-label view-matrix-label--x"
               transform={`rotate(60 ${x} ${y})`}
               textAnchor="start"
             >

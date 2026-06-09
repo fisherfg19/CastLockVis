@@ -1,4 +1,4 @@
-.sample-chart {
+.view-chart {
   display: grid;
   grid-template-rows: 1fr auto;
   gap: var(--space-2);
@@ -8,11 +8,11 @@
 }
 
 /* 带纵轴切换控件的图（视图 C）：控件行 / 图 / 脚注 三行。 */
-.sample-chart--alignment {
+.view-chart--alignment {
   grid-template-rows: auto 1fr auto;
 }
 
-.sample-chart__controls {
+.view-chart__controls {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -21,13 +21,13 @@
 }
 
 /* 视图 C 工具区：纵轴切换行 + 控制变量过滤器行 */
-.sample-chart__toolbar {
+.view-chart__toolbar {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
 }
 
-.sample-chart__filters {
+.view-chart__filters {
   display: grid;
   grid-template-columns: repeat(3, minmax(132px, 1fr)) auto;
   align-items: flex-end;
@@ -35,13 +35,13 @@
   padding: 0 var(--space-1);
 }
 
-.sample-chart__controls-label {
+.view-chart__controls-label {
   color: var(--color-text-dim);
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
 }
 
-.sample-axis-toggle {
+.view-axis-toggle {
   padding: var(--space-1) var(--space-2);
   border: var(--border);
   border-radius: var(--radius-sm);
@@ -52,12 +52,12 @@
   cursor: pointer;
 }
 
-.sample-axis-toggle.is-active {
+.view-axis-toggle.is-active {
   border-color: var(--color-accent);
   color: var(--color-text);
 }
 
-.sample-chart svg {
+.view-chart svg {
   width: 100%;
   height: 100%;
   min-height: var(--chart-min-height);
@@ -65,12 +65,12 @@
   border-radius: var(--radius-sm);
 }
 
-.sample-chart--cluster svg {
+.view-chart--cluster svg {
   cursor: crosshair;
   touch-action: none;
 }
 
-.sample-chart__empty {
+.view-chart__empty {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,37 +83,37 @@
   font-size: var(--fs-sm);
 }
 
-.sample-bg {
+.view-bg {
   fill: var(--color-chart-bg);
 }
 
-.sample-grid {
+.view-grid {
   stroke: var(--color-chart-grid);
   stroke-width: 1;
 }
 
-.sample-axis {
+.view-axis {
   stroke: var(--color-chart-axis);
   stroke-width: 1.15;
 }
 
-.sample-axis--subtle {
+.view-axis--subtle {
   stroke-opacity: 0.6;
 }
 
-.sample-axis-tick {
+.view-axis-tick {
   fill: var(--color-text-dim);
   font-family: var(--font-mono);
   font-size: 10px;
 }
 
-.sample-axis-label {
+.view-axis-label {
   fill: var(--color-text-dim);
   font-size: var(--fs-sm);
   letter-spacing: 0.01em;
 }
 
-.sample-hull {
+.view-hull {
   fill-opacity: 0.09;
   stroke-width: 1.4;
   stroke-opacity: 0.65;
@@ -121,7 +121,7 @@
   pointer-events: none;
 }
 
-.sample-point {
+.view-point {
   opacity: 0.72;
   stroke: var(--color-chart-bg);
   stroke-width: 0.9;
@@ -130,38 +130,38 @@
     stroke-width 180ms ease;
 }
 
-.sample-point:hover,
-.sample-point--active {
+.view-point:hover,
+.view-point--active {
   opacity: 1;
   stroke: var(--color-accent);
   stroke-width: 1.4;
 }
 
 /* 框选命中的演员：沿用 main 的 --selected 描边视觉。 */
-.sample-point--selected {
+.view-point--selected {
   opacity: 1;
   stroke: var(--color-text);
   stroke-width: 1.5;
 }
 
 /* 框选时未命中的点降明度，让选中群落浮出。 */
-.sample-point--dimmed {
+.view-point--dimmed {
   opacity: 0.18;
 }
 
 /* 可框选画布：拖动时不让浏览器选中文本/触发原生拖拽。 */
-.sample-chart__brushable {
+.view-chart__brushable {
   cursor: crosshair;
   touch-action: none;
   user-select: none;
 }
 
-.sample-river-band {
+.view-river-band {
   opacity: 0.88;
   shape-rendering: geometricPrecision;
 }
 
-.sample-entropy-line {
+.view-entropy-line {
   fill: none;
   stroke: var(--color-text);
   stroke-width: 2.1;
@@ -170,7 +170,7 @@
   animation: entropy-glow 1200ms ease-out;
 }
 
-.sample-film-dot {
+.view-film-dot {
   fill: var(--color-accent);
   fill-opacity: 0.32;
   stroke: var(--color-text);
@@ -178,70 +178,70 @@
   stroke-width: 0.8;
 }
 
-.sample-film-dot--clickable {
+.view-film-dot--clickable {
   cursor: pointer;
 }
 
-.sample-film-dot--clickable:hover {
+.view-film-dot--clickable:hover {
   fill-opacity: 0.7;
   stroke: var(--color-accent);
   stroke-width: 1.4;
 }
 
-.sample-peak-ring {
+.view-peak-ring {
   fill: none;
   stroke: var(--color-accent);
   stroke-width: 1;
   stroke-dasharray: 2 2;
 }
 
-.sample-spike-hit {
+.view-spike-hit {
   cursor: pointer;
   outline: none;
 }
 
-.sample-spike-hit:hover .sample-peak-ring,
-.sample-spike-hit:focus-visible .sample-peak-ring,
-.sample-peak-ring--active {
+.view-spike-hit:hover .view-peak-ring,
+.view-spike-hit:focus-visible .view-peak-ring,
+.view-peak-ring--active {
   stroke: var(--color-text);
   stroke-width: 1.6;
   stroke-dasharray: none;
 }
 
-.sample-peak-core {
+.view-peak-core {
   fill: var(--color-accent);
   stroke: var(--color-chart-bg);
   stroke-width: 0.8;
 }
 
-.sample-peak-label {
+.view-peak-label {
   fill: var(--color-text);
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
   pointer-events: none;
 }
 
-.sample-alignment-zone {
+.view-alignment-zone {
   opacity: 0.18;
 }
 
-.sample-alignment-zone--left {
+.view-alignment-zone--left {
   fill: var(--color-border);
 }
 
-.sample-t0-axis {
+.view-t0-axis {
   stroke: var(--color-accent);
   stroke-width: 1.1;
   stroke-dasharray: 4 3;
 }
 
-.sample-t0-label {
+.view-t0-label {
   fill: var(--color-accent);
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
 }
 
-.sample-track {
+.view-track {
   fill: none;
   stroke-width: 1.4;
   stroke-linecap: round;
@@ -251,82 +251,82 @@
     stroke-width 180ms ease;
 }
 
-.sample-track--success {
+.view-track--success {
   stroke: var(--color-success);
 }
 
-.sample-track--snapback {
+.view-track--snapback {
   stroke: var(--color-snapback);
   opacity: 0.72;
 }
 
 /* none：未检出转型，淡灰上下文层（沉底）。 */
-.sample-track--none {
+.view-track--none {
   stroke: var(--color-text-dim);
   stroke-width: 1;
   opacity: 0.25;
 }
 
 /* 过滤器命中之外的轨迹：最淡灰背景（链路 3 重分层）。 */
-.sample-track--context-out {
+.view-track--context-out {
   stroke: var(--color-text-dim);
   stroke-width: 1;
   opacity: 0.12;
 }
 
 /* 同 tau 同侪：保留 outcome 颜色，提亮加粗（链路 2）。 */
-.sample-track--peer {
+.view-track--peer {
   opacity: 0.85;
   stroke-width: 2.2;
 }
 
 /* 选中演员本人：accent 描边、满透明、最粗，始终置顶（不被过滤压暗）。 */
-.sample-track--selected {
+.view-track--selected {
   stroke: var(--color-accent);
   opacity: 1;
   stroke-width: 2.8;
 }
 
 /* 选中 tau 的对齐辅助竖线 */
-.sample-selected-guide {
+.view-selected-guide {
   stroke: var(--color-accent);
   stroke-width: 1.4;
   stroke-dasharray: 2 4;
   opacity: 0.75;
 }
 
-.sample-track--muted {
+.view-track--muted {
   opacity: 0.08;
 }
 
-.sample-track--peer {
+.view-track--peer {
   opacity: 0.78;
   stroke-width: 2.1;
   stroke-dasharray: 5 3;
 }
 
-.sample-track--selected {
+.view-track--selected {
   opacity: 1;
   stroke-width: 3.8;
   filter: drop-shadow(0 0 2px var(--color-text)) drop-shadow(0 0 5px var(--color-accent));
 }
 
-.sample-markov-cell {
+.view-markov-cell {
   fill: var(--color-accent);
   stroke: var(--color-bg);
   stroke-width: 0.55;
   transition: opacity 140ms ease;
 }
 
-.sample-markov-cell:hover {
+.view-markov-cell:hover {
   opacity: 1 !important;
 }
 
-.sample-markov-cell--diag {
+.view-markov-cell--diag {
   fill: var(--color-snapback);
 }
 
-.sample-matrix-label {
+.view-matrix-label {
   fill: var(--color-text-dim);
   font-size: 10px;
   font-family: var(--font-mono);
@@ -343,22 +343,22 @@
 }
 
 @media (max-width: 1100px) {
-  .sample-chart svg {
+  .view-chart svg {
     min-height: var(--chart-mobile-min-height);
   }
 }
 
 @media (max-width: 760px) {
-  .sample-chart {
+  .view-chart {
     gap: var(--space-1);
   }
 
-  .sample-chart__filters {
+  .view-chart__filters {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
     gap: var(--space-2);
   }
 
-  .sample-axis-toggle {
+  .view-axis-toggle {
     min-height: 28px;
   }
 }

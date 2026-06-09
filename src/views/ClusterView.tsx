@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { BrushLayer } from '../../components/controls/BrushLayer';
-import { ChartTooltip } from '../../components/common/ChartTooltip';
-import type { Actor } from '../../data/types';
-import { useVizStore } from '../../store/useVizStore';
+import { BrushLayer } from '../components/controls/BrushLayer';
+import { ChartTooltip } from '../components/common/ChartTooltip';
+import type { Actor } from '../data/types';
+import { useVizStore } from '../store/useVizStore';
 import {
   buildGenreTokenLookup,
   clusterHullPath,
@@ -11,7 +11,7 @@ import {
   withPadding,
 } from './chartUtils';
 
-interface ClusterSampleViewProps {
+interface ClusterViewProps {
   actors: Actor[];
   genres: string[];
 }
@@ -26,7 +26,7 @@ const HULL_KEEP_QUANTILE = 0.85; // 凸包只包住每簇最近 85% 的点，剔
 const HULL_PAD_PX = 10; // 凸包外扩像素（让 Music 这类小簇可见）
 const HULL_MIN_RADIUS = 18; // 凸包最小半径（让坍缩成点的 Western/Musical 仍可见）
 
-export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
+export function ClusterView({ actors, genres }: ClusterViewProps) {
   const [hoveredActorId, setHoveredActorId] = useState<string | null>(null);
 
   const brushedActorIds = useVizStore((state) => state.brushedActorIds);
@@ -102,7 +102,7 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
   }, [actors, genreTokenLookup]);
 
   if (!chart) {
-    return <div className="sample-chart__empty">actors.json 为空，无法渲染静态散点。</div>;
+    return <div className="view-chart__empty">actors.json 为空，无法渲染静态散点。</div>;
   }
 
   const points = chart.points;
@@ -141,14 +141,14 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
         : `clusters: ${chart.hulls.length} · 单击选演员 · 拖框选群落`;
 
   return (
-    <figure className="sample-chart sample-chart--cluster">
+    <figure className="view-chart view-chart--cluster">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        aria-label="Genre-Space Cluster static sample"
-        className="sample-chart__brushable"
+        aria-label="Genre-Space Cluster view"
+        className="view-chart__brushable"
       >
-        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="sample-bg" rx={8} />
+        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
 
         {chart.tickXs.map((x) => (
           <line
@@ -157,7 +157,7 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
             y1={MARGIN.top}
             x2={x}
             y2={HEIGHT - MARGIN.bottom}
-            className="sample-grid"
+            className="view-grid"
           />
         ))}
         {chart.tickYs.map((y) => (
@@ -167,7 +167,7 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
             y1={y}
             x2={WIDTH - MARGIN.right}
             y2={y}
-            className="sample-grid"
+            className="view-grid"
           />
         ))}
 
@@ -176,14 +176,14 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
           y1={HEIGHT - MARGIN.bottom}
           x2={WIDTH - MARGIN.right}
           y2={HEIGHT - MARGIN.bottom}
-          className="sample-axis"
+          className="view-axis"
         />
         <line
           x1={MARGIN.left}
           y1={MARGIN.top}
           x2={MARGIN.left}
           y2={HEIGHT - MARGIN.bottom}
-          className="sample-axis"
+          className="view-axis"
         />
 
         {/* 群落凸包：颜色按 clusterId，圈出每个 cohort 的占位区域 */}
@@ -193,7 +193,7 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
             <path
               key={`hull-${hull.clusterId}`}
               d={hull.path}
-              className="sample-hull"
+              className="view-hull"
               style={{ fill: `var(--cluster-${token})`, stroke: `var(--cluster-${token})` }}
             />
           );
@@ -218,10 +218,10 @@ export function ClusterSampleView({ actors, genres }: ClusterSampleViewProps) {
                 isActive || isBrushed ? POINT_R_ACTIVE : POINT_R,
               )}
               className={[
-                'sample-point',
-                isActive ? 'sample-point--active' : '',
-                isBrushed ? 'sample-point--selected' : '',
-                isDimmed ? 'sample-point--dimmed' : '',
+                'view-point',
+                isActive ? 'view-point--active' : '',
+                isBrushed ? 'view-point--selected' : '',
+                isDimmed ? 'view-point--dimmed' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

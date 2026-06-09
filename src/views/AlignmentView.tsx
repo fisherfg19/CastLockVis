@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ChartTooltip } from '../../components/common/ChartTooltip';
-import type { AlignmentPoint, AlignmentTrack, AlignmentTrackPivot } from '../../data/types';
-import { alignmentTrackInFilter } from '../../lib/aggregate';
-import { RangeSlider } from '../../components/controls/RangeSlider';
-import { useVizStore } from '../../store/useVizStore';
+import { ChartTooltip } from '../components/common/ChartTooltip';
+import type { AlignmentPoint, AlignmentTrack, AlignmentTrackPivot } from '../data/types';
+import { alignmentTrackInFilter } from '../lib/aggregate';
+import { RangeSlider } from '../components/controls/RangeSlider';
+import { useVizStore } from '../store/useVizStore';
 import { linearScale, polylinePath } from './chartUtils';
 
 function formatCompact(value: number): string {
@@ -23,7 +23,7 @@ function domainOf(values: number[]): [number, number] {
   return [Math.min(...values), Math.max(...values)];
 }
 
-interface AlignmentSampleViewProps {
+interface AlignmentViewProps {
   tracks: AlignmentTrack[];
 }
 
@@ -52,7 +52,7 @@ const WIDTH = 620;
 const HEIGHT = 320;
 const MARGIN = { top: 18, right: 20, bottom: 30, left: 34 };
 
-export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
+export function AlignmentView({ tracks }: AlignmentViewProps) {
   const [yAxis, setYAxis] = useState<YAxisMode>('dist');
 
   const selectedActorId = useVizStore((state) => state.selectedActorId);
@@ -214,7 +214,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
   }, [geometry, selectedActorId, selectedFilmIndex, alignmentFilters]);
 
   if (!geometry || !view) {
-    return <div className="sample-chart__empty">alignment.json 无可用分叉轨迹。</div>;
+    return <div className="view-chart__empty">alignment.json 无可用分叉轨迹。</div>;
   }
 
   const tooltipDetail = [
@@ -227,13 +227,13 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
     .join(' · ');
 
   return (
-    <figure className="sample-chart sample-chart--alignment">
-      <div className="sample-chart__toolbar">
-        <div className="sample-chart__controls" role="group" aria-label="视图 C 纵轴切换">
-          <span className="sample-chart__controls-label">纵轴</span>
+    <figure className="view-chart view-chart--alignment">
+      <div className="view-chart__toolbar">
+        <div className="view-chart__controls" role="group" aria-label="视图 C 纵轴切换">
+          <span className="view-chart__controls-label">纵轴</span>
           <button
             type="button"
-            className={`sample-axis-toggle${yAxis === 'dist' ? ' is-active' : ''}`}
+            className={`view-axis-toggle${yAxis === 'dist' ? ' is-active' : ''}`}
             aria-pressed={yAxis === 'dist'}
             onClick={() => setYAxis('dist')}
           >
@@ -241,14 +241,14 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
           </button>
           <button
             type="button"
-            className={`sample-axis-toggle${yAxis === 'entropy' ? ' is-active' : ''}`}
+            className={`view-axis-toggle${yAxis === 'entropy' ? ' is-active' : ''}`}
             aria-pressed={yAxis === 'entropy'}
             onClick={() => setYAxis('entropy')}
           >
             熵
           </button>
         </div>
-        <div className="sample-chart__filters" role="group" aria-label="控制变量过滤器（重分层）">
+        <div className="view-chart__filters" role="group" aria-label="控制变量过滤器（重分层）">
           <RangeSlider
             label="导演异质性"
             min={domains.directorHeterogeneity[0]}
@@ -277,20 +277,20 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
             format={formatCompact}
             scale="log"
           />
-          <button type="button" className="sample-axis-toggle" onClick={resetFilters}>
+          <button type="button" className="view-axis-toggle" onClick={resetFilters}>
             重置
           </button>
         </div>
       </div>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Transformation Alignment static sample">
-        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="sample-bg" rx={8} />
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Transformation Alignment view">
+        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
 
         <rect
           x={MARGIN.left}
           y={MARGIN.top}
           width={Math.max(0, geometry.t0x - MARGIN.left)}
           height={HEIGHT - MARGIN.top - MARGIN.bottom}
-          className="sample-alignment-zone sample-alignment-zone--left"
+          className="view-alignment-zone view-alignment-zone--left"
         />
 
         <line
@@ -298,9 +298,9 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
           y1={MARGIN.top}
           x2={geometry.t0x}
           y2={HEIGHT - MARGIN.bottom}
-          className="sample-t0-axis"
+          className="view-t0-axis"
         />
-        <text x={geometry.t0x + 6} y={MARGIN.top + 12} className="sample-t0-label">
+        <text x={geometry.t0x + 6} y={MARGIN.top + 12} className="view-t0-label">
           T=0
         </text>
 
@@ -311,9 +311,9 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
               y1={tick.y}
               x2={MARGIN.left}
               y2={tick.y}
-              className="sample-axis"
+              className="view-axis"
             />
-            <text x={MARGIN.left - 8} y={tick.y + 3} className="sample-axis-tick" textAnchor="end">
+            <text x={MARGIN.left - 8} y={tick.y + 3} className="view-axis-tick" textAnchor="end">
               {tick.value.toFixed(2)}
             </text>
           </g>
@@ -326,12 +326,12 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
               y1={HEIGHT - MARGIN.bottom}
               x2={tick.x}
               y2={HEIGHT - MARGIN.bottom + 4}
-              className="sample-axis"
+              className="view-axis"
             />
             <text
               x={tick.x}
               y={HEIGHT - MARGIN.bottom + 15}
-              className="sample-axis-tick"
+              className="view-axis-tick"
               textAnchor="middle"
             >
               {tick.value}
@@ -341,31 +341,31 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
 
         {/* 分层绘制（后画在上）：每个样式桶合并为单条 path，上下文沉底、同侪与选中浮顶 */}
         {view.contextOutD && (
-          <path d={view.contextOutD} className="sample-track sample-track--context-out" />
+          <path d={view.contextOutD} className="view-track view-track--context-out" />
         )}
-        {view.noneD && <path d={view.noneD} className="sample-track sample-track--none" />}
+        {view.noneD && <path d={view.noneD} className="view-track view-track--none" />}
         {view.contextInSuccessD && (
-          <path d={view.contextInSuccessD} className="sample-track sample-track--success" />
+          <path d={view.contextInSuccessD} className="view-track view-track--success" />
         )}
         {view.contextInSnapbackD && (
-          <path d={view.contextInSnapbackD} className="sample-track sample-track--snapback" />
+          <path d={view.contextInSnapbackD} className="view-track view-track--snapback" />
         )}
         {view.peerSuccessD && (
           <path
             d={view.peerSuccessD}
-            className="sample-track sample-track--success sample-track--peer"
+            className="view-track view-track--success view-track--peer"
           />
         )}
         {view.peerSnapbackD && (
           <path
             d={view.peerSnapbackD}
-            className="sample-track sample-track--snapback sample-track--peer"
+            className="view-track view-track--snapback view-track--peer"
           />
         )}
         {view.selectedItem && (
           <path
             d={view.selectedItem.path}
-            className={`sample-track sample-track--${view.selectedItem.outcome} sample-track--selected`}
+            className={`view-track view-track--${view.selectedItem.outcome} view-track--selected`}
           />
         )}
 
@@ -376,7 +376,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
             y1={MARGIN.top}
             x2={view.selectedGuideX}
             y2={HEIGHT - MARGIN.bottom}
-            className="sample-selected-guide"
+            className="view-selected-guide"
           />
         )}
 
@@ -385,19 +385,19 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
           y1={HEIGHT - MARGIN.bottom}
           x2={WIDTH - MARGIN.right}
           y2={HEIGHT - MARGIN.bottom}
-          className="sample-axis sample-axis--subtle"
+          className="view-axis view-axis--subtle"
         />
         <line
           x1={MARGIN.left}
           y1={MARGIN.top}
           x2={MARGIN.left}
           y2={HEIGHT - MARGIN.bottom}
-          className="sample-axis sample-axis--subtle"
+          className="view-axis view-axis--subtle"
         />
         <text
           x={(MARGIN.left + WIDTH - MARGIN.right) / 2}
           y={HEIGHT - 4}
-          className="sample-axis-label"
+          className="view-axis-label"
           textAnchor="middle"
         >
           tau = seqIndex - t0Index
@@ -405,7 +405,7 @@ export function AlignmentSampleView({ tracks }: AlignmentSampleViewProps) {
         <text
           x={12}
           y={(MARGIN.top + HEIGHT - MARGIN.bottom) / 2}
-          className="sample-axis-label"
+          className="view-axis-label"
           transform={`rotate(-90 12 ${(MARGIN.top + HEIGHT - MARGIN.bottom) / 2})`}
           textAnchor="middle"
         >

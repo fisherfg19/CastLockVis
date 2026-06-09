@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { ChartTooltip } from '../../components/common/ChartTooltip';
-import { averageEntropyCurves } from '../../lib/aggregate';
-import type { DataBundle, DataIndexes, EntropyCurve, EntropyPoint } from '../../data/types';
+import { ChartTooltip } from '../components/common/ChartTooltip';
+import { averageEntropyCurves } from '../lib/aggregate';
+import type { DataBundle, DataIndexes, EntropyCurve, EntropyPoint } from '../data/types';
 import { buildGenreTokenLookup, linearScale, pathFromBands, polylinePath } from './chartUtils';
 
-interface RiverSampleViewProps {
+interface RiverViewProps {
   bundle: DataBundle;
   indexes: DataIndexes;
   cohortActorIds: string[];
@@ -27,7 +27,7 @@ const WINDOW_SIZE = 3;
 const MAX_COHORT_N = 30;
 const CORE_GENRE_COUNT = 6;
 
-export function RiverSampleView({
+export function RiverView({
   bundle,
   indexes,
   cohortActorIds,
@@ -35,7 +35,7 @@ export function RiverSampleView({
   selectedActorId,
   selectedFilmIndex,
   onSpikeSelect,
-}: RiverSampleViewProps) {
+}: RiverViewProps) {
   const chart = useMemo(() => {
     // 单击 A 中演员（链路 2）优先在 B 显示该演员；其次才是框选群落平均态。
     if (selectedActorId !== null) {
@@ -49,7 +49,7 @@ export function RiverSampleView({
 
   if (!chart) {
     return (
-      <div className="sample-chart__empty">
+      <div className="view-chart__empty">
         {isCohortMode
           ? '当前选区缺少 cohort 数据，无法渲染平均河流。'
           : '样例演员缺少 films/entropy 数据，无法渲染。'}
@@ -58,30 +58,30 @@ export function RiverSampleView({
   }
 
   return (
-    <figure className="sample-chart sample-chart--river">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Career River static sample">
-        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="sample-bg" rx={8} />
+    <figure className="view-chart view-chart--river">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} aria-label="Career River view">
+        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
 
         <line
           x1={MARGIN.left}
           y1={chart.streamBottom}
           x2={WIDTH - MARGIN.right}
           y2={chart.streamBottom}
-          className="sample-axis"
+          className="view-axis"
         />
         <line
           x1={MARGIN.left}
           y1={chart.ratingBottom}
           x2={WIDTH - MARGIN.right}
           y2={chart.ratingBottom}
-          className="sample-axis sample-axis--subtle"
+          className="view-axis view-axis--subtle"
         />
 
         {chart.series.map((band) => (
           <path
             key={band.key}
             d={pathFromBands(band.points)}
-            className="sample-river-band"
+            className="view-river-band"
             style={{
               fill: `var(--genre-${band.tokenIndex})`,
               stroke: `var(--genre-${band.tokenIndex})`,
@@ -90,10 +90,10 @@ export function RiverSampleView({
           />
         ))}
 
-        <path d={chart.entropyPath} className="sample-entropy-line" />
+        <path d={chart.entropyPath} className="view-entropy-line" />
 
         {chart.dots.map(({ id, x, y, r }) => (
-          <circle key={id} cx={x} cy={y} r={r} className="sample-film-dot" />
+          <circle key={id} cx={x} cy={y} r={r} className="view-film-dot" />
         ))}
 
         {chart.spikes.map(({ id, actorId, seqIndex, x, y }) => {
@@ -101,7 +101,7 @@ export function RiverSampleView({
           return (
             <g
               key={`peak-${id}`}
-              className="sample-spike-hit"
+              className="view-spike-hit"
               role="button"
               aria-label={`Select entropy spike N${seqIndex}`}
               tabIndex={0}
@@ -117,10 +117,10 @@ export function RiverSampleView({
                 cx={x}
                 cy={y}
                 r={7.5}
-                className={`sample-peak-ring ${isActive ? 'sample-peak-ring--active' : ''}`}
+                className={`view-peak-ring ${isActive ? 'view-peak-ring--active' : ''}`}
               />
-              <circle cx={x} cy={y} r={2.6} className="sample-peak-core" />
-              <text x={x} y={y - 11} className="sample-peak-label" textAnchor="middle">
+              <circle cx={x} cy={y} r={2.6} className="view-peak-core" />
+              <text x={x} y={y - 11} className="view-peak-label" textAnchor="middle">
                 N{seqIndex}
               </text>
             </g>

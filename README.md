@@ -4,7 +4,7 @@
 
 CastLock-Vis 用「**宏观群落分布 → 中观序列演化 → 微观个体下钻**」的递进式流水线，结合四个高度联动的视图，帮助分析师回答一个工业问题：**演员是如何被一步步焊死在「舒适圈」里的，又有谁、靠什么打破了这层「重力场」。**
 
-> **项目状态：开发中（in development）。** 设计已初步定型；离线数据流水线**已完成**，6 份数据契约 JSON 已生成并入库；前端 SPA（Vite + React 18 + TS + D3 + Zustand）脚手架已搭好（`npm run dev/build` 可跑通），四视图与三条联动链路正按 [`docs/plan/TODO.md`](docs/plan/TODO.md) 实现中。权威设计规格见 [`docs/overall_design/proposal.md`](docs/overall_design/proposal.md)。
+> **项目状态：第一阶段功能收尾，进入 S6 视觉定稿。** 设计已初步定型；离线专家流水线**已完成**，6 份数据契约 JSON 已生成并入库；前端 SPA（Vite + React 18 + TS + D3 + Zustand）已跑通四视图、三条联动链路、通用控件与 Pages 构建。后续重点按 [`docs/plan/TODO.md`](docs/plan/TODO.md) 推进 S6 第二阶段完备视觉。权威设计规格见 [`docs/overall_design/proposal.md`](docs/overall_design/proposal.md)。
 
 ---
 
@@ -32,7 +32,7 @@ npm run dev        # 开发服务器 → http://localhost:5173/CastLockVis/
 
 ## 技术栈
 
-两层架构，仅通过 `public/data/*.json`（**数据契约**）连接。**重计算全部离线**（Python：UMAP/MDS 降维、KMeans 聚类、香农熵、马尔可夫矩阵、T=0 对齐），**前端只渲染与联动，运行时绝不重算统计**。
+两层架构，仅通过 `public/data/*.json`（**数据契约**）连接。**重计算全部离线**（Python：IDF 加权早期类型向量、15 维 KMeans 聚类、PaCMAP 投影、香农熵、软马尔可夫矩阵、T=0 对齐），**前端只渲染与联动，运行时绝不重算统计**。
 
 | 层 | 选型 |
 |---|---|
@@ -63,13 +63,13 @@ npm run dev        # 开发服务器 → http://localhost:5173/CastLockVis/
 ## 四个核心视图（Views）
 
 ### 视图 A — 类型偏好高维投影图（Genre-Space Cluster）
-UMAP / MDS 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部作品的类型概率向量**决定；颜色 = 早期占比最高的标志性类型。
+PaCMAP 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部作品的 IDF 加权类型向量**投影而来；颜色 = 早期占比最高的标志性类型，形状 / hull 辅助表达 `clusterId` 群落。
 
 ### 视图 B — 演艺生涯时序河流图（Career River Chronology）
 改进型时序流图（Streamgraph）。**横轴是作品序列索引（第 1…N 部），而非自然年份**；流厚度代表各类型接戏比例。河流上方叠加一条**白色香农熵折线**；每部电影是一个圆点，其垂直位置 / 大小编码 IMDb 评分或投票数。
 
 ### 视图 C — 转型时间轴对齐分叉图（Transformation Alignment View）
-事件对齐生存曲线。**系统自动捕捉每位演员「第一部彻底偏离早期舒适圈」的电影，并将其强行对齐为时间原点 T = 0**，从而让转型时机不同的演员可以横向对比。T < 0 是低熵窄束；T > 0 分叉为绿色「多维演化区」（成功）与红色「重新固化区」（被弹回）。
+事件对齐生存曲线。**系统自动捕捉每位演员「第一部明显偏离早期舒适圈」的尝试，并将其对齐为时间原点 T = 0**，从而让转型时机不同的演员可以横向对比。当前默认纵轴是类型偏离度 `dist`（`1 - cos(earlyGenreVector, rolling genre vector)`），熵仅作交叉参照；T < 0 是低偏离窄束，T > 0 分叉为绿色「多维演化区」（成功）与红色「重新固化区」（被弹回），`none` 轨迹作为淡灰上下文。
 
 ### 视图 D — 动态马尔可夫转移矩阵（Markov Transition Gate）
 交互式热力矩阵。行 = 当前类型，列 = 下一部类型，单元格深浅 = 转移概率。**支持按生涯阶段（早期 / 中期 / 晚期）过滤。**
@@ -89,7 +89,7 @@ UMAP / MDS 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部
 ```
 
 - **A → B + D（宏观→中观）：** 在 A 中框选某群落，B 重置为该群落的**平均叠加态**熵衰减曲线，D 取对应队列并按生涯阶段拆分（**群落粒度**：按选区覆盖的 `clusterId` 取预算矩阵，不实时重算）。
-- **B → C + 详情（中观→微观）：** 点击 B 熵曲线上的尖峰，激活 C（高亮该演员并对齐在同一作品索引尝试转型的同侪），并打开 details-on-demand 面板。
+- **A/B → C + 详情（中观→微观）：** 在 A 单击演员或点击 B 熵曲线上的尖峰，激活 C（高亮该演员 + 同 `clusterId` 同侪，按 `outcome` 分绿/红），并打开 details-on-demand 面板。选中作品序号仅用于绘制 τ 辅助线，不再作为同侪定义。
 - **C 上的全局过滤器（控制变量审计）：** 如「T=0 时合作导演的异质性」等过滤器需动态重组 C 的线条，揭示驱动分叉结果的外部协变量。
 
 **实现约束：** 实现任一视图时，必须保留联动视图所需的数据形态与稳定标识符 —— `actorId`、`seqIndex`、`tau (= seqIndex − t0Index)`、`clusterId`、`dominantGenre`。不得改变其语义，否则联动断裂。
@@ -102,12 +102,12 @@ UMAP / MDS 散点投影。**每个点 = 一位演员**，坐标由其**前 5 部
 
 | 文件 | 形状（实际） | 消费视图 |
 |---|---|---|
-| `genres.json` | `string[]`（21 个类型，颜色映射 key 基准） | 全部 |
-| `actors.json` | 814 × `{id,name,dominantEarlyGenre,earlyGenreVector,filmCount,t0Index,outcome,projection[x,y],clusterId}` | A、cohort 源 |
-| `films.json` | 20811 × `{actorId,seqIndex,title,year,genres[],dominantGenre,rating,numVotes,directorId}` | B、详情 |
-| `entropy.json` | 814 × `{actorId,curve:[{n,entropy}]}`（n=1..30） | B（白线）、C（纵轴） |
-| `markov.json` | 24 × `{cohortId,stage,genres[21],matrix[21][21]}`（8 群落 × early/mid/late） | D |
-| `alignment.json` | 707 × `{actorId,clusterId,t0Index,outcome,points:[{tau,entropy}],covariatesAtT0:{numVotes,rating,directorHeterogeneity}}` | C |
+| `genres.json` | `string[]`（15 个类型，颜色映射 key 基准） | 全部 |
+| `actors.json` | 1157 × `{id,name,dominantEarlyGenre,earlyGenreVector,filmCount,t0Index,outcome,projection[x,y],clusterId}` | A、cohort 源 |
+| `films.json` | 30336 × `{actorId,seqIndex,title,titleId,year,genres[],dominantGenre,rating,numVotes,directorId,directorName,directorHeterogeneity}` | B、详情 |
+| `entropy.json` | 1157 × `{actorId,curve:[{n,entropy}]}`（n=1..30） | B（白线）、C（交叉参照） |
+| `markov.json` | 21 × `{cohortId,stage,genres[15],matrix[15][15]}`（7 群落 × early/mid/late） | D |
+| `alignment.json` | 1157 × `{actorId,clusterId,t0Index,outcome,points:[{tau,entropy,dist}],covariatesAtT0:{...}}`（`dist` 为 C 默认纵轴；`none` 轨迹协变量为空，仅作淡灰上下文） | C |
 
 > **数据说明**：`films.title` 现为可读片名（`tconst` 另存于 `films.titleId`）；`films` 已逐片带 `directorName` 与 `directorHeterogeneity`，`alignment.covariatesAtT0` 亦保留 T=0 时刻的 `directorHeterogeneity`。若某功能需要不同形态，请在 `clean_expert.py`/`pipeline_json_expert.py` 修改并重跑流水线。
 
@@ -132,9 +132,12 @@ CastLockVis/
 │   ├── clean_expert.py · pipeline_json_expert.py
 ├── public/
 │   └── data/*.json                    # 6 份数据契约（已入库，构建拷入 dist/data/）
-└── src/                               # 前端源码（当前为 S0 冒烟测试，S1+ 起填充四视图）
+└── src/                               # 前端源码（四视图、联动 store、通用控件与样式）
     ├── main.tsx · App.tsx
-    └── styles/{tokens,global}.css     # 设计 token（第一阶段占位，换肤只改这里）
+    ├── data/ · store/ · lib/
+    ├── components/
+    ├── views/                         # 四个真实数据视图 + 图例与图表工具
+    └── styles/{tokens,global}.css     # 设计 token（第一阶段占位，S6 换肤主入口）
 ```
 
 目标 `src/` 布局（`{data,store,views,components,lib}`）见 ARCHITECTURE §6.1。

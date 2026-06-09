@@ -1,4 +1,4 @@
-import { ChartLegend, GenreColorLegend } from '../../components/common/ChartLegend';
+import { ChartLegend, GenreColorLegend } from '../components/common/ChartLegend';
 
 export { GenreColorLegend };
 

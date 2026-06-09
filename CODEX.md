@@ -9,13 +9,15 @@ actor "type lockup" (类型锁定) and "transformation windows" (转型窗口期
 **macro → meso → micro** pipeline across **four linked views**. The project's value is the
 **linking between views**, not any single view — preserve that above local polish.
 
-## Status: in development
+## Status: S5 complete, S6 visual pass next
 
-Design is frozen; the offline data pipeline is **done**; the frontend SPA is being **built**.
+Design is frozen; the offline data pipeline is **done**; the frontend SPA has the phase-1
+four-view + three-linking baseline in place. The next planned milestone is S6 visual polish.
 
 - ✅ Offline pipeline (`pipeline/`) + 6 data-contract JSONs (`public/data/`) — generated & committed.
-- ✅ Frontend env scaffolded (Vite + React 18 + TS + D3 + Zustand) — `npm run dev/build` work.
-- 🚧 The four views and three link paths — implement per [`docs/plan/TODO.md`](docs/plan/TODO.md).
+- ✅ Frontend app (Vite + React 18 + TS + D3 + Zustand) — `npm run dev/build` work.
+- ✅ Four views, three link paths, common controls, details panel, and Pages build are implemented per [`docs/plan/TODO.md`](docs/plan/TODO.md).
+- 🚧 S6 is the second visual phase: reskin via tokens/styles while preserving data flow and interaction semantics.
 
 ## Start here (read order)
 
@@ -41,7 +43,7 @@ Pipeline (rarely — only to regenerate data): `pip install -r pipeline/requirem
 **expert pipeline** that produced the committed `public/data/`: `python pipeline/clean_expert.py`
 (Step 1 cleaning — post-1967 US films, drops 6 noise genres, votes>2000) → `python
 pipeline/pipeline_json_expert.py` (Step 2 features — IDF-weighted vectors, 15D KMeans k=7, PaCMAP
-projection, soft Markov, IDF-threshold t0). This is the **only** pipeline — the pre-expert
+projection, soft Markov, **entropy-onset t0 + type-deviation `dist` fork** for View C). This is the **only** pipeline — the pre-expert
 `clean.py` / `pipeline_json.py` baselines were removed. See config.md.
 
 ## Architecture in one breath
@@ -52,14 +54,14 @@ Markov matrices, T=0 alignment); the **frontend only
 renders and links** — never recompute statistics at runtime. Cross-view interaction flows through a
 single Zustand store (`src/store/`); views read/write the store and never talk to each other directly.
 
-Target layout (ARCHITECTURE §6.1): `src/{data,store,views,components,lib}`. Currently `src/` holds an
-S0 smoke test (`App.tsx`) — replace it as S1+ lands.
+Target layout (ARCHITECTURE §6.1): `src/{data,store,views,components,lib}`. View components now live
+directly under `src/views/`, consume real data, and participate in the linked analysis flow.
 
 ## Non-negotiable constraints
 
 - **Linking is the grading criterion.** Three required paths (proposal §3 / ARCHITECTURE §6.3):
   1. **A→B+D (macro→meso):** brushing a cluster in A re-aggregates B as the cohort *average* and refilters D by cohort × stage.
-  2. **B→C+details (meso→micro):** clicking an entropy spike in B activates C (highlight actor, align same-index peers) and opens DetailsPanel.
+  2. **B→C+details (meso→micro):** selecting an actor (single-click in A, or clicking an entropy spike in B) activates C (highlight actor + same-`clusterId` peers, split green/red by outcome) and opens DetailsPanel. Peers are cluster-based, **not** same-index/tau — see ARCHITECTURE §6.3 for why.
   3. **Global filters on C:** restratify C's lines by T=0 covariates (e.g. director heterogeneity).
 - **Stable identifiers** every view must preserve so links don't break: `actorId`, `seqIndex`,
   `tau = seqIndex − t0Index`, `clusterId`, `dominantGenre`. Don't change their semantics.
@@ -74,9 +76,9 @@ S0 smoke test (`App.tsx`) — replace it as S1+ lands.
 | `genres.json` | `string[]` (15 genres, color-key basis) | all |
 | `actors.json` | 1157 × `{id,name,dominantEarlyGenre,earlyGenreVector,filmCount,t0Index,outcome,projection[x,y],clusterId}` | A, cohort source |
 | `films.json` | 30336 × `{actorId,seqIndex,title,titleId,year,genres[],dominantGenre,rating,numVotes,directorId,directorName,directorHeterogeneity}` | B, details |
-| `entropy.json` | 1157 × `{actorId,curve:[{n,entropy}]}` (n=1..30) | B (white line), C (y) |
+| `entropy.json` | 1157 × `{actorId,curve:[{n,entropy}]}` (n=1..30) | B (white line), C (cross-ref) |
 | `markov.json` | 21 × `{cohortId,stage,genres[15],matrix[15][15]}` (7 clusters × early/mid/late) | D |
-| `alignment.json` | 1137 × `{actorId,clusterId,t0Index,outcome,points:[{tau,entropy}],covariatesAtT0:{numVotes,rating,directorHeterogeneity}}` | C |
+| `alignment.json` | 1157 × `{actorId,clusterId,t0Index,outcome,points:[{tau,entropy,dist}],covariatesAtT0:{...}}` (`dist`=type-deviation, C's y-axis; `none` tracks anchored at pseudo-T0 w/ empty covariates, drawn as faint gray context) | C |
 
 Data notes (see FEATURE_LIST F0.8–F0.10): `films.title` is now the human-readable title (the `tconst`
 is kept in `films.titleId`); `films` carries per-film `directorName` + `directorHeterogeneity`, and

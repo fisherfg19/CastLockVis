@@ -21,7 +21,7 @@ npm install        # 安装依赖
 npm run dev        # 启动开发服务器（Vite，默认 http://localhost:5173/CastLockVis/）
 ```
 
-就绪标志：页面显示「✅ 数据契约可达：genres.json 含 21 个类型」，说明 React 渲染、CSS token、
+就绪标志：页面显示数据加载状态（当前数据契约约为 `genres=15 · actors=1157 · films=30336 · entropy=1157 · markov=21 · alignment=1157`），说明 React 渲染、CSS token、
 `public/data/*.json` 在 base 路径下加载三者均正常。
 
 常用脚本（见 `package.json`）：
@@ -84,9 +84,12 @@ CastLockVis/
 ├── eslint.config.js        # ESLint 扁平配置
 ├── .prettierrc.json        # 格式化规则
 ├── .gitignore              # node_modules / dist / 原始数据 / py 缓存
-├── src/                    # 前端源码（当前为 S0 冒烟测试，S1+ 起填充四视图）
+├── src/                    # 前端源码（四视图、联动 store、通用控件与样式）
 │   ├── main.tsx · App.tsx
-│   └── styles/tokens.css   # 设计 token（第一阶段占位，换肤只改这里）
+│   ├── data/ · store/ · lib/
+│   ├── components/
+│   ├── views/              # 四个真实数据视图 + 图例与图表工具
+│   └── styles/tokens.css   # 设计 token（第一阶段占位，S6 换肤主入口）
 ├── public/data/*.json      # 数据契约（已提交，构建时拷入 dist/data/）
 └── pipeline/               # 离线流水线 + requirements.txt
 ```

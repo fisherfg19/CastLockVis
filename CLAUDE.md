@@ -9,13 +9,15 @@ actor "type lockup" (类型锁定) and "transformation windows" (转型窗口期
 **macro → meso → micro** pipeline across **four linked views**. The project's value is the
 **linking between views**, not any single view — preserve that above local polish.
 
-## Status: in development
+## Status: S5 complete, S6 visual pass next
 
-Design is frozen; the offline data pipeline is **done**; the frontend SPA is being **built**.
+Design is frozen; the offline data pipeline is **done**; the frontend SPA has the phase-1
+four-view + three-linking baseline in place. The next planned milestone is S6 visual polish.
 
 - ✅ Offline pipeline (`pipeline/`) + 6 data-contract JSONs (`public/data/`) — generated & committed.
-- ✅ Frontend env scaffolded (Vite + React 18 + TS + D3 + Zustand) — `npm run dev/build` work.
-- 🚧 The four views and three link paths — implement per [`docs/plan/TODO.md`](docs/plan/TODO.md).
+- ✅ Frontend app (Vite + React 18 + TS + D3 + Zustand) — `npm run dev/build` work.
+- ✅ Four views, three link paths, common controls, details panel, and Pages build are implemented per [`docs/plan/TODO.md`](docs/plan/TODO.md).
+- 🚧 S6 is the second visual phase: reskin via tokens/styles while preserving data flow and interaction semantics.
 
 ## Start here (read order)
 
@@ -52,8 +54,8 @@ Markov matrices, T=0 alignment); the **frontend only
 renders and links** — never recompute statistics at runtime. Cross-view interaction flows through a
 single Zustand store (`src/store/`); views read/write the store and never talk to each other directly.
 
-Target layout (ARCHITECTURE §6.1): `src/{data,store,views,components,lib}`. Currently `src/` holds an
-S0 smoke test (`App.tsx`) — replace it as S1+ lands.
+Target layout (ARCHITECTURE §6.1): `src/{data,store,views,components,lib}`. View components now live
+directly under `src/views/`, consume real data, and participate in the linked analysis flow.
 
 ## Non-negotiable constraints
 
