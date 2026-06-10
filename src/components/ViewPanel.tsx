@@ -2,9 +2,12 @@ import type { ReactNode } from 'react';
 import './ViewPanel.css';
 
 type ViewStatus = 'ready' | 'empty' | 'loading' | 'error';
+export type ViewPanelArea = 'cluster' | 'river' | 'alignment' | 'markov';
 
 interface ViewPanelProps {
   title: string;
+  area?: ViewPanelArea;
+  className?: string;
   toolbar?: ReactNode;
   legend?: ReactNode;
   children?: ReactNode;
@@ -14,6 +17,8 @@ interface ViewPanelProps {
 
 export function ViewPanel({
   title,
+  area,
+  className,
   toolbar,
   legend,
   children,
@@ -35,9 +40,16 @@ export function ViewPanel({
         {message ?? fallbackTextByStatus[status]}
       </div>
     );
+  const panelClassName = [
+    'view-panel',
+    area ? `view-panel--${area}` : null,
+    className ?? null,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <section className="view-panel">
+    <section className={panelClassName} data-panel-area={area}>
       <header className="view-panel__header">
         <h2 className="view-panel__title">{title}</h2>
         <div className="view-panel__toolbar">{toolbar}</div>
@@ -47,4 +59,3 @@ export function ViewPanel({
     </section>
   );
 }
-

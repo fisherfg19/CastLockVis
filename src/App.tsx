@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { DetailsPanel } from './components/DetailsPanel';
 import { InteractionGuide } from './components/InteractionGuide';
-import { ViewPanel } from './components/ViewPanel';
+import { ViewPanel, type ViewPanelArea } from './components/ViewPanel';
 import { Toggle } from './components/controls/Toggle';
 import { useDataRuntime } from './data/dataRuntimeContext';
 import type { MarkovStage } from './data/types';
@@ -27,6 +27,7 @@ import './components/DetailsPanel.css';
 import './views/Views.css';
 
 interface ReadyPanel {
+  area: ViewPanelArea;
   title: string;
   legend: JSX.Element;
   content: JSX.Element;
@@ -44,12 +45,13 @@ interface ReadyInteractionState {
   detailsOpen: boolean;
 }
 
-const PANEL_TITLES = [
-  'A · Genre-Space Cluster',
-  'B · Career River',
-  'C · Transformation Alignment',
-  'D · Markov Transition Gate',
-] as const;
+const PANEL_CONFIGS = [
+  { area: 'cluster', title: 'A · Genre-Space Cluster' },
+  { area: 'river', title: 'B · Career River' },
+  { area: 'alignment', title: 'C · Transformation Alignment' },
+  { area: 'markov', title: 'D · Markov Transition Gate' },
+] as const satisfies ReadonlyArray<{ area: ViewPanelArea; title: string }>;
+type PanelConfig = (typeof PANEL_CONFIGS)[number];
 
 function StageToggle() {
   const stage = useVizStore((state) => state.markovStage);
@@ -139,14 +141,14 @@ export function App() {
 
     const panels: ReadyPanel[] = [
       {
-        title: PANEL_TITLES[0],
+        ...PANEL_CONFIGS[0],
         legend: <ClusterLegend />,
         content: (
           <ClusterView actors={loadState.bundle.actors} genres={loadState.bundle.genres} />
         ),
       },
       {
-        title: PANEL_TITLES[1],
+        ...PANEL_CONFIGS[1],
         legend: <RiverLegend />,
         content: (
           <RiverView
@@ -165,12 +167,12 @@ export function App() {
         ),
       },
       {
-        title: PANEL_TITLES[2],
+        ...PANEL_CONFIGS[2],
         legend: <AlignmentLegend />,
         content: <AlignmentView tracks={loadState.bundle.alignment} />,
       },
       {
-        title: PANEL_TITLES[3],
+        ...PANEL_CONFIGS[3],
         legend: <MarkovLegend />,
         toolbar: <StageToggle />,
         content: <MarkovView matrix={markovMatrix} />,
@@ -189,6 +191,31 @@ export function App() {
     stage,
   ]);
 
+  const renderLoadingPanel = (panel: PanelConfig) => (
+    <ViewPanel
+      key={panel.area}
+      area={panel.area}
+      title={panel.title}
+      toolbar={panel.area === 'markov' ? <StageToggle /> : undefined}
+      legend={<span className="status-text">Legend 占位</span>}
+      status={loadState.status}
+      message={loadState.status === 'error' ? loadState.message : undefined}
+    />
+  );
+
+  const renderReadyPanel = (panel: ReadyPanel) => (
+    <ViewPanel
+      key={panel.area}
+      area={panel.area}
+      title={panel.title}
+      toolbar={panel.toolbar}
+      legend={panel.legend}
+      status="ready"
+    >
+      {panel.content}
+    </ViewPanel>
+  );
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -206,30 +233,15 @@ export function App() {
       {readyInteraction && <InteractionGuide {...readyInteraction} />}
 
       <section className="app-grid">
-        {loadState.status !== 'ready' &&
-          PANEL_TITLES.map((title) => (
-            <ViewPanel
-              key={title}
-              title={title}
-              toolbar={title.startsWith('D') ? <StageToggle /> : undefined}
-              legend={<span className="status-text">Legend 占位</span>}
-              status={loadState.status}
-              message={loadState.status === 'error' ? loadState.message : undefined}
-            />
-          ))}
+        <div className="app-grid__row app-grid__row--top">
+          {loadState.status !== 'ready' && PANEL_CONFIGS.slice(0, 2).map(renderLoadingPanel)}
+          {loadState.status === 'ready' && readyPanels?.slice(0, 2).map(renderReadyPanel)}
+        </div>
 
-        {loadState.status === 'ready' &&
-          readyPanels?.map((panel) => (
-            <ViewPanel
-              key={panel.title}
-              title={panel.title}
-              toolbar={panel.toolbar}
-              legend={panel.legend}
-              status="ready"
-            >
-              {panel.content}
-            </ViewPanel>
-          ))}
+        <div className="app-grid__row app-grid__row--bottom">
+          {loadState.status !== 'ready' && PANEL_CONFIGS.slice(2).map(renderLoadingPanel)}
+          {loadState.status === 'ready' && readyPanels?.slice(2).map(renderReadyPanel)}
+        </div>
       </section>
 
       {loadState.status === 'ready' && <DetailsPanel />}

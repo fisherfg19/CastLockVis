@@ -7,9 +7,9 @@ interface MarkovViewProps {
   matrix: MarkovMatrix | null;
 }
 
-const WIDTH = 620;
-const HEIGHT = 320;
-const MARGIN = { top: 18, right: 18, bottom: 82, left: 112 };
+const WIDTH = 360;
+const HEIGHT = 340;
+const MARGIN = { top: 10, right: 14, bottom: 78, left: 88 };
 
 interface HoverCell {
   row: number;
@@ -31,11 +31,13 @@ export function MarkovView({ matrix }: MarkovViewProps) {
       HEIGHT - MARGIN.top - MARGIN.bottom,
     );
     const cellSize = gridSize / n;
+    const matrixX = MARGIN.left + (WIDTH - MARGIN.left - MARGIN.right - gridSize) / 2;
+    const matrixY = MARGIN.top;
 
     const cells = matrix.matrix.flatMap((row, rowIndex) =>
       row.map((value, colIndex) => {
-        const x = MARGIN.left + colIndex * cellSize;
-        const y = MARGIN.top + rowIndex * cellSize;
+        const x = matrixX + colIndex * cellSize;
+        const y = matrixY + rowIndex * cellSize;
         return {
           row: rowIndex,
           col: colIndex,
@@ -48,7 +50,7 @@ export function MarkovView({ matrix }: MarkovViewProps) {
       }),
     );
 
-    return { n, cellSize, cells };
+    return { n, cellSize, matrixX, matrixY, cells };
   }, [matrix]);
 
   if (!chart || !matrix) {
@@ -75,11 +77,11 @@ export function MarkovView({ matrix }: MarkovViewProps) {
         ))}
 
         {matrix.genres.map((genre, index) => {
-          const y = MARGIN.top + index * chart.cellSize + chart.cellSize * 0.65;
+          const y = chart.matrixY + index * chart.cellSize + chart.cellSize * 0.65;
           return (
             <text
               key={`row-${genre}`}
-              x={MARGIN.left - 8}
+              x={chart.matrixX - 8}
               y={y}
               className="view-matrix-label"
               textAnchor="end"
@@ -90,8 +92,8 @@ export function MarkovView({ matrix }: MarkovViewProps) {
         })}
 
         {matrix.genres.map((genre, index) => {
-          const x = MARGIN.left + index * chart.cellSize + chart.cellSize * 0.55;
-          const y = MARGIN.top + chart.n * chart.cellSize + 14;
+          const x = chart.matrixX + index * chart.cellSize + chart.cellSize * 0.55;
+          const y = chart.matrixY + chart.n * chart.cellSize + 14;
           return (
             <text
               key={`col-${genre}`}

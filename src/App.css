@@ -1,6 +1,6 @@
 .app-shell {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: var(--space-4);
   width: 100%;
   min-width: var(--app-min-width);
@@ -44,11 +44,60 @@
 }
 
 .app-grid {
+  --layout-top-row: 0.92fr;
+  --layout-bottom-row: 1.08fr;
+  --layout-cluster-column: 1fr;
+  --layout-river-column: 1fr;
+  --layout-alignment-column: 1.25fr;
+  --layout-markov-column: 0.75fr;
+  --layout-cluster-column-min: var(--panel-min-width);
+  --layout-river-column-min: var(--panel-min-width);
+  --layout-alignment-column-min: var(--panel-min-width);
+  --layout-markov-column-min: 420px;
+
   display: grid;
-  grid-template-columns: repeat(2, minmax(var(--panel-min-width), 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows:
+    minmax(0, var(--layout-top-row))
+    minmax(0, var(--layout-bottom-row));
   gap: var(--space-4);
   min-height: 0;
+}
+
+.app-grid__row {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}
+
+.app-grid__row--top {
+  grid-template-areas: "cluster river";
+  grid-template-columns:
+    minmax(var(--layout-cluster-column-min), var(--layout-cluster-column))
+    minmax(var(--layout-river-column-min), var(--layout-river-column));
+}
+
+.app-grid__row--bottom {
+  grid-template-areas: "alignment markov";
+  grid-template-columns:
+    minmax(var(--layout-alignment-column-min), var(--layout-alignment-column))
+    minmax(var(--layout-markov-column-min), var(--layout-markov-column));
+}
+
+.view-panel--cluster {
+  grid-area: cluster;
+}
+
+.view-panel--river {
+  grid-area: river;
+}
+
+.view-panel--alignment {
+  grid-area: alignment;
+}
+
+.view-panel--markov {
+  grid-area: markov;
 }
 
 .status-text {
@@ -62,8 +111,24 @@
   }
 
   .app-grid {
+    grid-template-rows: auto auto;
+  }
+
+  .app-grid__row {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(4, minmax(var(--panel-mobile-row-min-height), 1fr));
+    grid-template-rows: repeat(2, minmax(var(--panel-mobile-row-min-height), 1fr));
+  }
+
+  .app-grid__row--top {
+    grid-template-areas:
+      "cluster"
+      "river";
+  }
+
+  .app-grid__row--bottom {
+    grid-template-areas:
+      "alignment"
+      "markov";
   }
 }
 

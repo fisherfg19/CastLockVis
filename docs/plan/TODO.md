@@ -115,7 +115,7 @@
     - 第一版可不做强边界约束，但不得出现“轻轻一拖即丢失面板焦点 / 误触关闭 / 文本被选中”的问题。
   - 预期落点：`src/components/DetailsPanel.tsx`、`src/components/DetailsPanel.css`、`src/store/useVizStore.ts`。
 
-- [ ] **四视图空间重新分配 + 参数化布局**
+- [x] **四视图空间重新分配 + 参数化布局**
   - 现状：`App.css` 中 `.app-grid` 仍是固定的 2×2 均分网格；`ViewPanel` 不接受布局 class / area；四个视图获得的空间完全一致。结果是：
     - 视图 D（Markov）因矩阵天然偏正方形，横向面板里只占了约一半可用空间；
     - 视图 C 相较之下更拥挤，尤其在保留顶部 controls / filters 时更明显；
@@ -161,17 +161,23 @@
   - 实施约束：
     - 推荐集中梳理 `ClusterView` 的 click / brush end / empty brush 分支，避免在多个事件回调里各自猜 active selection。
     - 必要时增加轻量 selector，例如 `getActiveActorIds` / `getActiveSelectionMode`，但不要引入新的跨视图通信通道。
+    - B/C/D 接收选区时也必须使用同一套 active selection 规则：`brushedActorIds` 非空时不得继续把 cached `selectedActorId`
+      当作当前 active 单选；只有 `brushedActorIds` 为空时，cached `selectedActorId` 才重新成为 active selection。
   - 建议实现路径：
     - 单击点时先 `clearBrush()`，再写入 `selectedActorId` / 清空 `selectedFilmIndex` / 关闭 `detailsOpen`，使单选明确覆盖旧圈选。
     - 非空拖框时只写入 `brushedActorIds` 并关闭 `detailsOpen`，不要清掉 cached `selectedActorId`；这样后续清空圈选时可以自然回退到旧单选。
     - 空拖框与点击空白统一处理为“只清空 `brushedActorIds`”：若 cached 单选存在，active selection 回到该单选；若不存在，再进入默认 fallback。
     - A 内部的 tooltip / dimming / active class 都从同一套 active selection 派生，避免显示状态与实际联动状态分叉。
+    - `RiverView` / `App` 接线需改为 active mode 优先：非空 brush 时显示 cohort 平均河流与 cohort 峰值；brush 为空且有 cached 单选时才显示单演员河流。
+    - `AlignmentView` 也需从 active selection 派生高亮 / 同侪 / tau 辅助线；第一版至少要避免 brush active 时继续高亮 cached 单选演员。
   - 当前代码评估：
     - 现有 `ClusterView.handleBrush()` 会在空 / 非空拖框后都 `clearSelection()`，这是需要改掉的核心分支。
     - 现有 `ClusterView.handleSelectPoint()` 不会 `clearBrush()`，这是“圈选后单选仍残留圈选高亮”的主要原因。
+    - 现有 `RiverView` 在 `selectedActorId !== null` 时优先渲染单演员，若任务 4 改成“圈选不清 cached 单选”，B 会错误地忽略当前 active brush。
+    - 现有 `AlignmentView` 只订阅 `selectedActorId` / `selectedFilmIndex`，没有读取 `brushedActorIds`；若任务 4 保留 cached 单选，C 会在 brush active 时继续显示旧单点高亮。
     - 现有 `BrushLayer` 已经把小拖动视作单击、并用 `nearestPoint()` 返回实际命中 actor；第一版可以复用这套命中结果，只需保证 A 的高亮完全跟随写入 store 的 actor。
     - 单选置顶可通过把 selected / hovered / brushed 点拆成上层渲染 pass 解决，不需要改 store。
-  - 预期落点：`src/views/ClusterView.tsx`、`src/components/controls/BrushLayer.tsx`、`src/store/useVizStore.ts`，必要时触及 `src/store/selectors.ts`。
+  - 预期落点：`src/views/ClusterView.tsx`、`src/views/RiverView.tsx`、`src/views/AlignmentView.tsx`、`src/components/controls/BrushLayer.tsx`、`src/store/useVizStore.ts`，必要时触及 `src/store/selectors.ts` 与 `src/App.tsx`。
 
 - [ ] **Markov 矩阵仅在单 cluster 语义下显示**
   - 现状：当 A 里选中来自多个 `clusterId` 的点时，D 似乎会按点数最多的 cluster 显示 Markov 矩阵，导致“当前矩阵代表谁”不明确。
