@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { BrushLayer } from '../components/controls/BrushLayer';
 import { ChartTooltip } from '../components/common/ChartTooltip';
 import type { Actor } from '../data/types';
@@ -14,6 +14,15 @@ import {
 interface ClusterViewProps {
   actors: Actor[];
   genres: string[];
+}
+
+interface ClusterSummaryItem {
+  clusterId: number;
+  count: number;
+  percent: number;
+  barPercent: number;
+  actorIds: string[];
+  token: number;
 }
 
 const WIDTH = 620;
@@ -56,6 +65,31 @@ export function ClusterView({ actors, genres }: ClusterViewProps) {
     () => actors.find((actor) => actor.id === selectedActorId) ?? null,
     [actors, selectedActorId],
   );
+
+  const clusterSummary = useMemo<ClusterSummaryItem[]>(() => {
+    const total = actors.length || 1;
+    const byCluster = new Map<number, { count: number; actorIds: string[] }>();
+
+    for (const actor of actors) {
+      const current = byCluster.get(actor.clusterId) ?? { count: 0, actorIds: [] };
+      current.count += 1;
+      current.actorIds.push(actor.id);
+      byCluster.set(actor.clusterId, current);
+    }
+
+    const maxCount = Math.max(...[...byCluster.values()].map((summary) => summary.count), 1);
+
+    return [...byCluster.entries()]
+      .sort(([leftClusterId], [rightClusterId]) => leftClusterId - rightClusterId)
+      .map(([clusterId, summary]) => ({
+        clusterId,
+        count: summary.count,
+        percent: (summary.count / total) * 100,
+        barPercent: (summary.count / maxCount) * 100,
+        actorIds: summary.actorIds,
+        token: ((clusterId % CLUSTER_TOKENS) + CLUSTER_TOKENS) % CLUSTER_TOKENS,
+      }));
+  }, [actors]);
 
   const chart = useMemo(() => {
     if (actors.length === 0) {
@@ -142,105 +176,136 @@ export function ClusterView({ actors, genres }: ClusterViewProps) {
 
   return (
     <figure className="view-chart view-chart--cluster">
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        aria-label="Genre-Space Cluster view"
-        className="view-chart__brushable"
-      >
-        <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
+      <div className="view-cluster-layout">
+        <div className="view-cluster-main">
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+            aria-label="Genre-Space Cluster view"
+            className="view-chart__brushable"
+          >
+            <rect x={0} y={0} width={WIDTH} height={HEIGHT} className="view-bg" rx={8} />
 
-        {chart.tickXs.map((x) => (
-          <line
-            key={`vx-${x}`}
-            x1={x}
-            y1={MARGIN.top}
-            x2={x}
-            y2={HEIGHT - MARGIN.bottom}
-            className="view-grid"
-          />
-        ))}
-        {chart.tickYs.map((y) => (
-          <line
-            key={`hy-${y}`}
-            x1={MARGIN.left}
-            y1={y}
-            x2={WIDTH - MARGIN.right}
-            y2={y}
-            className="view-grid"
-          />
-        ))}
+            {chart.tickXs.map((x) => (
+              <line
+                key={`vx-${x}`}
+                x1={x}
+                y1={MARGIN.top}
+                x2={x}
+                y2={HEIGHT - MARGIN.bottom}
+                className="view-grid"
+              />
+            ))}
+            {chart.tickYs.map((y) => (
+              <line
+                key={`hy-${y}`}
+                x1={MARGIN.left}
+                y1={y}
+                x2={WIDTH - MARGIN.right}
+                y2={y}
+                className="view-grid"
+              />
+            ))}
 
-        <line
-          x1={MARGIN.left}
-          y1={HEIGHT - MARGIN.bottom}
-          x2={WIDTH - MARGIN.right}
-          y2={HEIGHT - MARGIN.bottom}
-          className="view-axis"
-        />
-        <line
-          x1={MARGIN.left}
-          y1={MARGIN.top}
-          x2={MARGIN.left}
-          y2={HEIGHT - MARGIN.bottom}
-          className="view-axis"
-        />
-
-        {/* 群落凸包：颜色按 clusterId，圈出每个 cohort 的占位区域 */}
-        {chart.hulls.map((hull) => {
-          const token = ((hull.clusterId % CLUSTER_TOKENS) + CLUSTER_TOKENS) % CLUSTER_TOKENS;
-          return (
-            <path
-              key={`hull-${hull.clusterId}`}
-              d={hull.path}
-              className="view-hull"
-              style={{ fill: `var(--cluster-${token})`, stroke: `var(--cluster-${token})` }}
+            <line
+              x1={MARGIN.left}
+              y1={HEIGHT - MARGIN.bottom}
+              x2={WIDTH - MARGIN.right}
+              y2={HEIGHT - MARGIN.bottom}
+              className="view-axis"
             />
-          );
-        })}
-
-        {/* 演员点：形状=群落(cluster)，填色=早期主导类型(genre) */}
-        {chart.points.map(({ actor, x, y, tokenIndex, clusterId }) => {
-          const isHovered = hoveredActorId === actor.id;
-          // 单击选中的演员（链路 2 起点）：保持高亮，且 brush 激活时不被调暗。
-          const isActorSelected = selectedActorId === actor.id;
-          // 群落框选命中的演员：沿用 main 的 brush 视觉（--selected 描边 + 放大）。
-          const isBrushed = brushedActorIds.has(actor.id);
-          const isActive = isHovered || isActorSelected;
-          const isDimmed = hasBrush && !isBrushed && !isActorSelected;
-          return (
-            <path
-              key={actor.id}
-              d={clusterSymbolPath(
-                clusterId,
-                x,
-                y,
-                isActive || isBrushed ? POINT_R_ACTIVE : POINT_R,
-              )}
-              className={[
-                'view-point',
-                isActive ? 'view-point--active' : '',
-                isBrushed ? 'view-point--selected' : '',
-                isDimmed ? 'view-point--dimmed' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              style={{ fill: `var(--genre-${tokenIndex})` }}
-              onMouseEnter={() => setHoveredActorId(actor.id)}
-              onMouseLeave={() => setHoveredActorId(null)}
+            <line
+              x1={MARGIN.left}
+              y1={MARGIN.top}
+              x2={MARGIN.left}
+              y2={HEIGHT - MARGIN.bottom}
+              className="view-axis"
             />
-          );
-        })}
 
-        {/* 通用框选层：绑定拖框/单击逻辑并绘制框选矩形 */}
-        <BrushLayer
-          svgRef={svgRef}
-          points={points}
-          onBrush={handleBrush}
-          onSelectPoint={handleSelectPoint}
-          onClearBrush={clearBrush}
-        />
-      </svg>
+            {/* 群落凸包：颜色按 clusterId，圈出每个 cohort 的占位区域 */}
+            {chart.hulls.map((hull) => {
+              const token = ((hull.clusterId % CLUSTER_TOKENS) + CLUSTER_TOKENS) % CLUSTER_TOKENS;
+              return (
+                <path
+                  key={`hull-${hull.clusterId}`}
+                  d={hull.path}
+                  className="view-hull"
+                  style={{ fill: `var(--cluster-${token})`, stroke: `var(--cluster-${token})` }}
+                />
+              );
+            })}
+
+            {/* 演员点：形状=群落(cluster)，填色=早期主导类型(genre) */}
+            {chart.points.map(({ actor, x, y, tokenIndex, clusterId }) => {
+              const isHovered = hoveredActorId === actor.id;
+              // 单击选中的演员（链路 2 起点）：保持高亮，且 brush 激活时不被调暗。
+              const isActorSelected = selectedActorId === actor.id;
+              // 群落框选命中的演员：沿用 main 的 brush 视觉（--selected 描边 + 放大）。
+              const isBrushed = brushedActorIds.has(actor.id);
+              const isActive = isHovered || isActorSelected;
+              const isDimmed = hasBrush && !isBrushed && !isActorSelected;
+              return (
+                <path
+                  key={actor.id}
+                  d={clusterSymbolPath(
+                    clusterId,
+                    x,
+                    y,
+                    isActive || isBrushed ? POINT_R_ACTIVE : POINT_R,
+                  )}
+                  className={[
+                    'view-point',
+                    isActive ? 'view-point--active' : '',
+                    isBrushed ? 'view-point--selected' : '',
+                    isDimmed ? 'view-point--dimmed' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  style={{ fill: `var(--genre-${tokenIndex})` }}
+                  onMouseEnter={() => setHoveredActorId(actor.id)}
+                  onMouseLeave={() => setHoveredActorId(null)}
+                />
+              );
+            })}
+
+            {/* 通用框选层：绑定拖框/单击逻辑并绘制框选矩形 */}
+            <BrushLayer
+              svgRef={svgRef}
+              points={points}
+              onBrush={handleBrush}
+              onSelectPoint={handleSelectPoint}
+              onClearBrush={clearBrush}
+            />
+          </svg>
+        </div>
+
+        <aside className="cluster-composition" aria-label="Cluster composition">
+          <div className="cluster-composition__list">
+            {clusterSummary.map(({ clusterId, count, percent, barPercent, token }) => (
+              <div
+                key={clusterId}
+                className="cluster-composition__row"
+                data-cluster-id={clusterId}
+                style={
+                  {
+                    '--cluster-color': `var(--cluster-${token})`,
+                    '--cluster-bar-percent': `${barPercent}%`,
+                  } as CSSProperties
+                }
+              >
+                <span className="cluster-composition__bar" aria-hidden>
+                  <span className="cluster-composition__bar-fill" />
+                </span>
+                <span className="cluster-composition__label">C{clusterId}</span>
+                <span className="cluster-composition__metric">
+                  <strong>{count}</strong>
+                  <span>{percent.toFixed(1)}%</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
 
       <ChartTooltip
         label={tooltipLabel}
